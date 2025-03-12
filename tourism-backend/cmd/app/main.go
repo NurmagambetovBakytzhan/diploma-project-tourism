@@ -7,6 +7,9 @@ import (
 	"tourism-backend/internal/app"
 )
 
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
 func main() {
 	// Configuration
 	cfg, err := config.NewConfig()

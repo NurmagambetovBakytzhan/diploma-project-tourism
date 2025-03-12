@@ -29,8 +29,8 @@ func NewRouter(handler *gin.Engine, l logger.Interface, usecase *usecase.UserUse
 	handler.Use(gin.Recovery())
 
 	// Swagger
-	swaggerHandler := ginSwagger.DisablingWrapHandler(swaggerFiles.Handler, "DISABLE_SWAGGER_HTTP_HANDLER")
-	handler.GET("/swagger/*any", swaggerHandler)
+	swaggerHandler := ginSwagger.WrapHandler(swaggerFiles.Handler)
+	handler.GET("/v1/users/swagger/*any", swaggerHandler)
 
 	// K8s probe
 	handler.GET("/v1/users/healthz", func(c *gin.Context) {

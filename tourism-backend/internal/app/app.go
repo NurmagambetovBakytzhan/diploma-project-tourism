@@ -23,7 +23,15 @@ import (
 	"tourism-backend/pkg/postgres"
 )
 
-// Run creates objects via constructors.
+// @Summary Get static files (images/videos)
+// @Description Serves static files (images and videos) from the /uploads directory. Example: http://localhost:8000/v1/tours/uploads/images/filename.png
+// @Tags Static Files
+// @Produce json
+// @Param type path string true "File type (images or videos)"
+// @Param filename path string true "Filename with extension"
+// @Success 200 {file} binary "Returns the requested file."
+// @Failure 404 {object} map[string]string "File not found"
+// @Router /v1/tours/uploads/{type}/{filename} [get]
 func Run(cfg *config.Config) {
 	l := logger.New(cfg.Log.Level)
 
