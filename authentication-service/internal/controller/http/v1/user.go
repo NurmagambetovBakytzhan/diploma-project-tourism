@@ -42,6 +42,16 @@ func (r *userRoutes) GetUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, &users)
 }
 
+// @Summary User login
+// @Description Authenticates a user and returns a JWT token.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param request body entity.LoginUserDTO true "Login credentials"
+// @Success 200 {object} map[string]string "JWT token"
+// @Failure 400 {object} map[string]string "Invalid input"
+// @Failure 500 {object} map[string]string "Authentication error"
+// @Router /v1/users/login [post]
 func (r *userRoutes) LoginUser(c *gin.Context) {
 	var input entity.LoginUserDTO
 
@@ -58,6 +68,16 @@ func (r *userRoutes) LoginUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
+// @Summary Register a new user
+// @Description Creates a new user account with a hashed password.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param request body entity.CreateUserDTO true "User registration data"
+// @Success 201 {object} map[string]interface{} "User registered successfully"
+// @Failure 400 {object} map[string]string "Invalid input"
+// @Failure 500 {object} map[string]string "Error hashing password"
+// @Router /v1/users/ [post]
 func (r *userRoutes) RegisterUser(c *gin.Context) {
 	var createUserDTO entity.CreateUserDTO
 	if err := c.ShouldBindJSON(&createUserDTO); err != nil {

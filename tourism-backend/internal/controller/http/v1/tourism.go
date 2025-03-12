@@ -22,9 +22,9 @@ type tourismRoutes struct {
 
 func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l logger.Interface, csbn *casbin.Enforcer, payment *payment.PaymentProcessor) {
 	r := &tourismRoutes{t, l, payment}
-
 	h := handler.Group("/tours")
 	{
+		h.GET("/v1/tours/uploads/:type/:filename", r.GetStaticFiles)
 		h.GET("/", r.GetTours)
 		h.GET("/:id", r.GetTourByID)
 		h.GET("/categories", r.GetAllCategories)
@@ -49,6 +49,15 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 	}
 }
 
+// GetTourEventByID retrieves details of a specific tour event.
+// @Summary Get tour event by ID
+// @Description Fetches detailed information of a tour event by its ID
+// @Tags Tour Events
+// @Produce json
+// @Param id path string true "Tour Event ID"
+// @Success 200 {object} entity.TourEvent
+// @Failure 500 {object} map[string]string
+// @Router /v1/tours/tour-events/{id} [get]
 func (r *tourismRoutes) GetTourEventByID(c *gin.Context) {
 	tourEventID, err := uuid.Parse(c.Param("id"))
 
@@ -61,6 +70,15 @@ func (r *tourismRoutes) GetTourEventByID(c *gin.Context) {
 	c.JSON(http.StatusOK, tourEvent)
 }
 
+// GetWeatherByTourEventID retrieves weather information for a specific tour event.
+// @Summary Get weather by tour event ID
+// @Description Fetches weather information related to a tour event
+// @Tags Weather
+// @Produce json
+// @Param id path string true "Tour Event ID"
+// @Success 200 {object} entity.WeatherInfo
+// @Failure 500 {object} map[string]string
+// @Router /v1/tours/tour-events/{id}/weather [get]
 func (r *tourismRoutes) GetWeatherByTourEventID(c *gin.Context) {
 	tourEventID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -73,6 +91,19 @@ func (r *tourismRoutes) GetWeatherByTourEventID(c *gin.Context) {
 	c.JSON(http.StatusOK, weatherInfo)
 }
 
+// GetFilteredTourEvents retrieves filtered tour events based on query parameters.
+// @Summary Get filtered tour events
+// @Description Fetches a list of tour events filtered by criteria
+// @Tags Tour Events
+// @Produce json
+// @Param start_date query string false "Start Date (YYYY-MM-DD)"
+// @Param end_date query string false "End Date (YYYY-MM-DD)"
+// @Param min_price query number false "Minimum Price"
+// @Param max_price query number false "Maximum Price"
+// @Success 200 {array} entity.TourEvent
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /v1/tours/tour-events [get]
 func (r *tourismRoutes) GetFilteredTourEvents(c *gin.Context) {
 	var filter entity.TourEventFilter
 
@@ -115,6 +146,16 @@ func (r *tourismRoutes) GetFilteredTourEvents(c *gin.Context) {
 	c.JSON(http.StatusOK, tourEvents)
 }
 
+// GetTourLocationByID retrieves a tour location by ID.
+// @Summary Get tour location by ID
+// @Description Fetches details of a specific tour location.
+// @Tags Provider
+// @Produce json
+// @Param id path string true "Tour Location ID"
+// @Security BearerAuth
+// @Success 200 {object} entity.TourLocation "Tour location details"
+// @Router /v1/tours/provider/tour-location/{id} [get]
+// @Security Bearer
 func (r *tourismRoutes) GetTourLocationByID(c *gin.Context) {
 	userID := utils.GetUserIDFromContext(c)
 
@@ -137,6 +178,17 @@ func (r *tourismRoutes) GetTourLocationByID(c *gin.Context) {
 
 }
 
+// CreateTourLocation creates a new tour location.
+// @Summary Create a new tour location
+// @Description Adds a new location for tours.
+// @Tags Provider
+// @Accept json
+// @Produce json
+// @Param location body entity.CreateTourLocationDTO true "Tour location details"
+// @Security BearerAuth
+// @Success 201 {object} entity.TourLocation "Created tour location"
+// @Router /v1/tours/provider/tour-location [post]
+// @Security Bearer
 func (r *tourismRoutes) CreateTourLocation(c *gin.Context) {
 	var createTourLocationDTO entity.CreateTourLocationDTO
 	if err := c.ShouldBind(&createTourLocationDTO); err != nil {
@@ -158,6 +210,17 @@ func (r *tourismRoutes) CreateTourLocation(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Tour Location created successfully!", "Tour Location": createdTourLocation})
 }
 
+// CreateTourCategory creates a new tour category.
+// @Summary Create a new tour category
+// @Description Adds a new category for tours.
+// @Tags Provider
+// @Accept json
+// @Produce json
+// @Param category body entity.CreateTourCategoryDTO true "Tour category details"
+// @Security BearerAuth
+// @Success 201 {object} entity.TourCategory "Created tour category"
+// @Router /v1/tours/provider/tour-category [post]
+// @Security Bearer
 func (r *tourismRoutes) CreateTourCategory(c *gin.Context) {
 	var createTourCategoryDTO entity.CreateTourCategoryDTO
 	if err := c.ShouldBind(&createTourCategoryDTO); err != nil {
@@ -180,6 +243,14 @@ func (r *tourismRoutes) CreateTourCategory(c *gin.Context) {
 
 }
 
+// GetAllCategories retrieves all tour categories.
+// @Summary Get all categories
+// @Description Fetches a list of all available tour categories
+// @Tags Categories
+// @Produce json
+// @Success 200 {array} entity.Category
+// @Failure 500 {object} map[string]string
+// @Router /v1/tours/categories [get]
 func (r *tourismRoutes) GetAllCategories(c *gin.Context) {
 	categories, err := r.t.GetAllCategories()
 	if err != nil {
@@ -190,6 +261,18 @@ func (r *tourismRoutes) GetAllCategories(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"Categories": categories})
 }
 
+// PayTourEvent handles tour event payments.
+// @Summary Pay for a tour event
+// @Description Processes a payment for a selected tour event
+// @Tags Payments
+// @Accept json
+// @Produce json
+// @Security BearerToken
+// @Param request body entity.TourPurchaseRequest true "Purchase Request"
+// @Success 200 {object} entity.Purchase
+// @Failure 400 {object} map[string]string
+// @Router /v1/tours/payment [post]
+// @Security Bearer
 func (r *tourismRoutes) PayTourEvent(c *gin.Context) {
 	var purchaseRaw entity.TourPurchaseRequest
 	if err := c.ShouldBindJSON(&purchaseRaw); err != nil {
@@ -216,6 +299,20 @@ func (r *tourismRoutes) PayTourEvent(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"Purchase": processingPurchase})
 }
 
+// CreateTourEvent handles the creation of a new tour event related to some specific tour with images and videos.
+// @Summary Create a new tour event
+// @Description Create a new tour event.
+// @Tags Tours
+// @Accept multipart/form-data
+// @Produce json
+// @Param description formData string true "Tour Description"
+// @Param route formData string true "Tour Route"
+// @Param price formData int true "Tour Price"
+// @Success 201 {object} entity.TourDocs
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /v1/tours [post]
+// @Security Bearer
 func (r *tourismRoutes) CreateTourEvent(c *gin.Context) {
 	var createTourEventDTO entity.CreateTourEventDTO
 
@@ -249,10 +346,29 @@ func (r *tourismRoutes) CreateTourEvent(c *gin.Context) {
 
 }
 
-func GetStaticFiles(c *gin.Context) {
+// GetStaticFiles serves static files (images and videos) for a given tour.
+// @Summary Get static files for a tour
+// @Description Fetches images and videos for a specific tour by ID.Example http://localhost:8080/uploads/videos/4f72a1cb-6ed4-4f01-b38b-b605d3062236.mp4.
+// @Tags Tours
+// @Produce json
+// @Param id path string true "Tour ID"
+// @Success 200 {object} map[string]interface{} "Returns a list of image and video URLs."
+// @Failure 400 {object} map[string]string "Invalid Tour ID"
+// @Failure 404 {object} map[string]string "Tour not found"
+// @Router /v1/tours/{id} [get]
+func (r *tourismRoutes) GetStaticFiles(c *gin.Context) {
 
 }
 
+// GetTourByID retrieves details of a specific tour.
+// @Summary Get tour by ID
+// @Description Fetches detailed information of a tour by its ID
+// @Tags Tours
+// @Produce json
+// @Param id path string true "Tour ID"
+// @Success 200 {object} entity.Tour
+// @Failure 500 {object} map[string]string
+// @Router /v1/tours/{id} [get]
 func (r *tourismRoutes) GetTourByID(c *gin.Context) {
 	tour, err := r.t.GetTourByID(c.Param("id"))
 	if err != nil {
@@ -263,6 +379,14 @@ func (r *tourismRoutes) GetTourByID(c *gin.Context) {
 	c.JSON(http.StatusOK, tour)
 }
 
+// GetTours retrieves a list of available tours.
+// @Summary Get all tours
+// @Description Fetches a list of all available tours
+// @Tags Tours
+// @Produce json
+// @Success 200 {array} entity.Tour
+// @Failure 500 {object} map[string]string
+// @Router /v1/tours [get]
 func (r *tourismRoutes) GetTours(c *gin.Context) {
 
 	tours, err := r.t.GetTours()
@@ -274,6 +398,21 @@ func (r *tourismRoutes) GetTours(c *gin.Context) {
 	c.JSON(http.StatusOK, tours)
 }
 
+// CreateTour handles the creation of a new tour with images and videos.
+// @Summary Create a new tour
+// @Description Create a new tour with images and videos.
+// @Tags Tours
+// @Accept multipart/form-data
+// @Produce json
+// @Param description formData string true "Tour Description"
+// @Param route formData string true "Tour Route"
+// @Param images formData file false "Tour Images (multiple allowed)"
+// @Param videos formData file false "Tour Videos (multiple allowed)"
+// @Success 201 {object} entity.TourDocs
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /v1/tours/provider [post]
+// @Security Bearer
 func (r *tourismRoutes) CreateTour(c *gin.Context) {
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 200<<20) // 200MB
 

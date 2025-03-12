@@ -38,7 +38,8 @@ func newAdminRoutes(handler *gin.RouterGroup, t usecase.AdminInterface, l logger
 // @Security BearerAuth
 // @Success 200 {array} entity.User
 // @Failure 500 {object} map[string]string
-// @Router /admin/users [get]
+// @Router /v1/admin/users [get]
+// @Security Bearer
 func (r *adminRoutes) GetUsers(c *gin.Context) {
 	users, err := r.t.GetUsers()
 
