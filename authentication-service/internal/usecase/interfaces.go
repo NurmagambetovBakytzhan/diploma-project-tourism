@@ -1,0 +1,16 @@
+// Package usecase implements application business logic. Each logic group in own file.
+package usecase
+
+import (
+	"authentication-service/internal/entity"
+)
+
+//go:generate mockgen -source=interfaces.go -destination=./mocks_test.go -package=usecase_test
+
+type (
+	UserInterface interface {
+		LoginUser(user *entity.LoginUserDTO) (string, error)
+		RegisterUser(user *entity.User) (*entity.User, error)
+		GetUsers() ([]*entity.User, error)
+	}
+)

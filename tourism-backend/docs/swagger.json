@@ -1,0 +1,947 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/admin/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Fetches a list of all registered users.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get all users",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.User"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tours": {
+            "get": {
+                "description": "Fetch a list of all available tours.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tours"
+                ],
+                "summary": "Get all tours",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.TourDocs"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new tour with images and videos.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tours"
+                ],
+                "summary": "Create a new tour",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tour Description",
+                        "name": "description",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tour Route",
+                        "name": "route",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Tour Images (multiple allowed)",
+                        "name": "images",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Tour Videos (multiple allowed)",
+                        "name": "videos",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/entity.TourDocs"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tours/categories": {
+            "get": {
+                "description": "Fetches a list of all available tour categories.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tours"
+                ],
+                "summary": "Get all tour categories",
+                "responses": {
+                    "200": {
+                        "description": "List of tour categories",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.TourCategory"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tours/payment": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Processes a payment for a selected tour event.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payment"
+                ],
+                "summary": "Pay for a tour event",
+                "parameters": [
+                    {
+                        "description": "Payment details",
+                        "name": "payment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.TourPurchaseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Purchase details",
+                        "schema": {
+                            "$ref": "#/definitions/entity.Purchase"
+                        }
+                    }
+                }
+            }
+        },
+        "/tours/provider/tour-category": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Adds a new category for tours.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "provider"
+                ],
+                "summary": "Create a new tour category",
+                "parameters": [
+                    {
+                        "description": "Tour category details",
+                        "name": "category",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.CreateTourCategoryDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created tour category",
+                        "schema": {
+                            "$ref": "#/definitions/entity.TourCategory"
+                        }
+                    }
+                }
+            }
+        },
+        "/tours/provider/tour-location": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Adds a new location for tours.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "provider"
+                ],
+                "summary": "Create a new tour location",
+                "parameters": [
+                    {
+                        "description": "Tour location details",
+                        "name": "location",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.CreateTourLocationDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created tour location",
+                        "schema": {
+                            "$ref": "#/definitions/entity.TourLocation"
+                        }
+                    }
+                }
+            }
+        },
+        "/tours/provider/tour-location/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Fetches details of a specific tour location.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "provider"
+                ],
+                "summary": "Get tour location by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tour Location ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tour location details",
+                        "schema": {
+                            "$ref": "#/definitions/entity.TourLocation"
+                        }
+                    }
+                }
+            }
+        },
+        "/tours/tour-events": {
+            "get": {
+                "description": "Fetches a list of tour events based on filters like date, price, and category.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tours"
+                ],
+                "summary": "Get filtered tour events",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Category IDs",
+                        "name": "category_ids",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Minimum price",
+                        "name": "min_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Maximum price",
+                        "name": "max_price",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of filtered tour events",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.TourEvent"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tours/{id}": {
+            "get": {
+                "description": "Fetch details of a specific tour by its UUID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tours"
+                ],
+                "summary": "Get a tour by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tour ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.TourDocs"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tours/{id}/": {
+            "get": {
+                "description": "Fetches images and videos for a specific tour by ID.Example http://localhost:8080/uploads/videos/4f72a1cb-6ed4-4f01-b38b-b605d3062236.mp4.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tours"
+                ],
+                "summary": "Get static files for a tour",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tour ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns a list of image and video URLs.",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid Tour ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Tour not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
+            "post": {
+                "description": "Creates a new user account with the provided details.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Register a new user",
+                "parameters": [
+                    {
+                        "description": "User registration data",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.CreateUserDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/login": {
+            "post": {
+                "description": "Authenticates a user with their credentials and returns an access token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Login a user",
+                "parameters": [
+                    {
+                        "description": "User login credentials",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.LoginUserDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Authentication successful",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "entity.Category": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tourCategories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.TourCategory"
+                    }
+                }
+            }
+        },
+        "entity.CreateTourCategoryDTO": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "string"
+                },
+                "tour_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CreateTourLocationDTO": {
+            "type": "object",
+            "properties": {
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "tour_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CreateUserDTO": {
+            "type": "object",
+            "required": [
+                "email",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "role": {
+                    "description": "Optional: \"user\" (default) or \"admin\"",
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.Image": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "tour": {
+                    "$ref": "#/definitions/entity.Tour"
+                },
+                "tour_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.ImageDocs": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "string"
+                },
+                "image_bytes": {
+                    "type": "string"
+                },
+                "tour_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.LoginUserDTO": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.Purchase": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "string"
+                },
+                "Status": {
+                    "type": "string"
+                },
+                "TourEvent": {
+                    "$ref": "#/definitions/entity.TourEvent"
+                },
+                "TourEventID": {
+                    "type": "string"
+                },
+                "User": {
+                    "$ref": "#/definitions/entity.User"
+                },
+                "UserID": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.Tour": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "string"
+                },
+                "route": {
+                    "type": "string"
+                },
+                "tour_categories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.TourCategory"
+                    }
+                },
+                "tour_events": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.TourEvent"
+                    }
+                },
+                "tour_images": {
+                    "description": "Relationships",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Image"
+                    }
+                },
+                "tour_location": {
+                    "$ref": "#/definitions/entity.TourLocation"
+                },
+                "tour_videos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Video"
+                    }
+                }
+            }
+        },
+        "entity.TourCategory": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/entity.Category"
+                },
+                "categoryID": {
+                    "type": "string"
+                },
+                "tour": {
+                    "$ref": "#/definitions/entity.Tour"
+                },
+                "tour_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.TourDocs": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "route": {
+                    "type": "string"
+                },
+                "tour_images": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.ImageDocs"
+                    }
+                },
+                "tour_videos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.VideoDocs"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.TourEvent": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                },
+                "data": {
+                    "type": "string"
+                },
+                "is_opened": {
+                    "type": "boolean"
+                },
+                "place": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "purchases": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Purchase"
+                    }
+                },
+                "tour": {
+                    "$ref": "#/definitions/entity.Tour"
+                },
+                "tour_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.TourLocation": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "tour": {
+                    "$ref": "#/definitions/entity.Tour"
+                },
+                "tour_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.TourPurchaseRequest": {
+            "type": "object",
+            "properties": {
+                "tour_event_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.User": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "string"
+                },
+                "createdTours": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Tour"
+                    }
+                },
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "purchasedTourEvents": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Purchase"
+                    }
+                },
+                "role": {
+                    "description": "user,admin, etc.",
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.Video": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "string"
+                },
+                "tour": {
+                    "$ref": "#/definitions/entity.Tour"
+                },
+                "tour_id": {
+                    "type": "string"
+                },
+                "video_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.VideoDocs": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "string"
+                },
+                "tour_id": {
+                    "type": "string"
+                },
+                "video_bytes": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
