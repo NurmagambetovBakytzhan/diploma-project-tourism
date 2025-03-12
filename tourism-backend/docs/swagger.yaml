@@ -1,0 +1,617 @@
+definitions:
+  entity.Category:
+    properties:
+      ID:
+        type: string
+      name:
+        type: string
+      tourCategories:
+        items:
+          $ref: '#/definitions/entity.TourCategory'
+        type: array
+    type: object
+  entity.CreateTourCategoryDTO:
+    properties:
+      category_id:
+        type: string
+      tour_id:
+        type: string
+    type: object
+  entity.CreateTourLocationDTO:
+    properties:
+      latitude:
+        type: number
+      longitude:
+        type: number
+      tour_id:
+        type: string
+    type: object
+  entity.CreateUserDTO:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      role:
+        description: 'Optional: "user" (default) or "admin"'
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  entity.Image:
+    properties:
+      ID:
+        type: string
+      image_url:
+        type: string
+      tour:
+        $ref: '#/definitions/entity.Tour'
+      tour_id:
+        type: string
+    type: object
+  entity.ImageDocs:
+    properties:
+      ID:
+        type: string
+      image_bytes:
+        type: string
+      tour_id:
+        type: string
+    type: object
+  entity.LoginUserDTO:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  entity.Purchase:
+    properties:
+      ID:
+        type: string
+      Status:
+        type: string
+      TourEvent:
+        $ref: '#/definitions/entity.TourEvent'
+      TourEventID:
+        type: string
+      User:
+        $ref: '#/definitions/entity.User'
+      UserID:
+        type: string
+    type: object
+  entity.Tour:
+    properties:
+      ID:
+        type: string
+      description:
+        type: string
+      owner_id:
+        type: string
+      route:
+        type: string
+      tour_categories:
+        items:
+          $ref: '#/definitions/entity.TourCategory'
+        type: array
+      tour_events:
+        items:
+          $ref: '#/definitions/entity.TourEvent'
+        type: array
+      tour_images:
+        description: Relationships
+        items:
+          $ref: '#/definitions/entity.Image'
+        type: array
+      tour_location:
+        $ref: '#/definitions/entity.TourLocation'
+      tour_videos:
+        items:
+          $ref: '#/definitions/entity.Video'
+        type: array
+    type: object
+  entity.TourCategory:
+    properties:
+      category:
+        $ref: '#/definitions/entity.Category'
+      categoryID:
+        type: string
+      tour:
+        $ref: '#/definitions/entity.Tour'
+      tour_id:
+        type: string
+    type: object
+  entity.TourDocs:
+    properties:
+      ID:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      price:
+        type: integer
+      route:
+        type: string
+      tour_images:
+        items:
+          $ref: '#/definitions/entity.ImageDocs'
+        type: array
+      tour_videos:
+        items:
+          $ref: '#/definitions/entity.VideoDocs'
+        type: array
+      updated_at:
+        type: string
+    type: object
+  entity.TourEvent:
+    properties:
+      ID:
+        type: string
+      amount:
+        type: number
+      data:
+        type: string
+      is_opened:
+        type: boolean
+      place:
+        type: string
+      price:
+        type: number
+      purchases:
+        items:
+          $ref: '#/definitions/entity.Purchase'
+        type: array
+      tour:
+        $ref: '#/definitions/entity.Tour'
+      tour_id:
+        type: string
+    type: object
+  entity.TourLocation:
+    properties:
+      ID:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      tour:
+        $ref: '#/definitions/entity.Tour'
+      tour_id:
+        type: string
+    type: object
+  entity.TourPurchaseRequest:
+    properties:
+      tour_event_id:
+        type: string
+    type: object
+  entity.User:
+    properties:
+      ID:
+        type: string
+      createdTours:
+        items:
+          $ref: '#/definitions/entity.Tour'
+        type: array
+      email:
+        type: string
+      password:
+        type: string
+      purchasedTourEvents:
+        items:
+          $ref: '#/definitions/entity.Purchase'
+        type: array
+      role:
+        description: user,admin, etc.
+        type: string
+      username:
+        type: string
+    type: object
+  entity.Video:
+    properties:
+      ID:
+        type: string
+      tour:
+        $ref: '#/definitions/entity.Tour'
+      tour_id:
+        type: string
+      video_url:
+        type: string
+    type: object
+  entity.VideoDocs:
+    properties:
+      ID:
+        type: string
+      tour_id:
+        type: string
+      video_bytes:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /admin/users:
+    get:
+      consumes:
+      - application/json
+      description: Fetches a list of all registered users.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.User'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all users
+      tags:
+      - admin
+  /tours:
+    get:
+      description: Fetch a list of all available tours.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.TourDocs'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all tours
+      tags:
+      - tours
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new tour with images and videos.
+      parameters:
+      - description: Tour Description
+        in: formData
+        name: description
+        required: true
+        type: string
+      - description: Tour Route
+        in: formData
+        name: route
+        required: true
+        type: string
+      - description: Tour Images (multiple allowed)
+        in: formData
+        name: images
+        type: file
+      - description: Tour Videos (multiple allowed)
+        in: formData
+        name: videos
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.TourDocs'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new tour
+      tags:
+      - tours
+  /tours/{id}:
+    get:
+      description: Fetch details of a specific tour by its UUID.
+      parameters:
+      - description: Tour ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.TourDocs'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get a tour by ID
+      tags:
+      - tours
+  /tours/{id}/:
+    get:
+      description: Fetches images and videos for a specific tour by ID.Example http://localhost:8080/uploads/videos/4f72a1cb-6ed4-4f01-b38b-b605d3062236.mp4.
+      parameters:
+      - description: Tour ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns a list of image and video URLs.
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid Tour ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Tour not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get static files for a tour
+      tags:
+      - tours
+  /tours/categories:
+    get:
+      description: Fetches a list of all available tour categories.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of tour categories
+          schema:
+            items:
+              $ref: '#/definitions/entity.TourCategory'
+            type: array
+      summary: Get all tour categories
+      tags:
+      - tours
+  /tours/payment:
+    post:
+      consumes:
+      - application/json
+      description: Processes a payment for a selected tour event.
+      parameters:
+      - description: Payment details
+        in: body
+        name: payment
+        required: true
+        schema:
+          $ref: '#/definitions/entity.TourPurchaseRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Purchase details
+          schema:
+            $ref: '#/definitions/entity.Purchase'
+      security:
+      - BearerAuth: []
+      summary: Pay for a tour event
+      tags:
+      - payment
+  /tours/provider/tour-category:
+    post:
+      consumes:
+      - application/json
+      description: Adds a new category for tours.
+      parameters:
+      - description: Tour category details
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/entity.CreateTourCategoryDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created tour category
+          schema:
+            $ref: '#/definitions/entity.TourCategory'
+      security:
+      - BearerAuth: []
+      summary: Create a new tour category
+      tags:
+      - provider
+  /tours/provider/tour-location:
+    post:
+      consumes:
+      - application/json
+      description: Adds a new location for tours.
+      parameters:
+      - description: Tour location details
+        in: body
+        name: location
+        required: true
+        schema:
+          $ref: '#/definitions/entity.CreateTourLocationDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created tour location
+          schema:
+            $ref: '#/definitions/entity.TourLocation'
+      security:
+      - BearerAuth: []
+      summary: Create a new tour location
+      tags:
+      - provider
+  /tours/provider/tour-location/{id}:
+    get:
+      description: Fetches details of a specific tour location.
+      parameters:
+      - description: Tour Location ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tour location details
+          schema:
+            $ref: '#/definitions/entity.TourLocation'
+      security:
+      - BearerAuth: []
+      summary: Get tour location by ID
+      tags:
+      - provider
+  /tours/tour-events:
+    get:
+      description: Fetches a list of tour events based on filters like date, price,
+        and category.
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      - collectionFormat: csv
+        description: Category IDs
+        in: query
+        items:
+          type: string
+        name: category_ids
+        type: array
+      - description: Minimum price
+        in: query
+        name: min_price
+        type: number
+      - description: Maximum price
+        in: query
+        name: max_price
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of filtered tour events
+          schema:
+            items:
+              $ref: '#/definitions/entity.TourEvent'
+            type: array
+      summary: Get filtered tour events
+      tags:
+      - tours
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account with the provided details.
+      parameters:
+      - description: User registration data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/entity.CreateUserDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User registered successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - users
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user with their credentials and returns an access
+        token.
+      parameters:
+      - description: User login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/entity.LoginUserDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Authentication successful
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login a user
+      tags:
+      - users
+swagger: "2.0"

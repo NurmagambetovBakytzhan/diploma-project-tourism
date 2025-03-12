@@ -1,0 +1,5 @@
+p, admin, /v1/admin/*, *
+p, user, /user/profile, GET
+p, provider, /v1/tours/provider/*, *
+g, admin, user
+g, admin, provider
