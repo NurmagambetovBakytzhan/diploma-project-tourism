@@ -27,6 +27,7 @@ type (
 		GetFilteredTourEvents(*entity.TourEventFilter) ([]*entity.TourEvent, error)
 		GetWeatherByTourEventID(tourEventID uuid.UUID) (*entity.WeatherInfo, error)
 		GetTourEventByID(id uuid.UUID) (*entity.TourEvent, error)
+		AddFileToTourByTourID(panoramaEntity *entity.Panorama) (*entity.Panorama, error)
 	}
 	UserInterface interface {
 		LoginUser(user *entity.LoginUserDTO) (string, error)

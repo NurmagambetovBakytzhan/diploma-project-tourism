@@ -26,6 +26,14 @@ func NewTourismRepo(pg *postgres.Postgres) *TourismRepo {
 	return &TourismRepo{pg}
 }
 
+func (r *TourismRepo) AddFileToTourByTourID(panoramaEntity *entity.Panorama) (*entity.Panorama, error) {
+	err := r.PG.Conn.Create(&panoramaEntity).Error
+	if err != nil {
+		return nil, err
+	}
+	return panoramaEntity, nil
+}
+
 func (r *TourismRepo) GetWeatherInfoByTourEventID(tourEventID uuid.UUID) (*entity.WeatherInfoRQ, error) {
 	var result struct {
 		Date      time.Time
@@ -264,7 +272,7 @@ func (r *TourismRepo) CreateTourEvent(tourEvent *entity.TourEvent) (*entity.Tour
 func (r *TourismRepo) GetTourByID(tourID string) (*entity.Tour, error) {
 	var tour entity.Tour
 
-	err := r.PG.Conn.Preload("TourImages").Preload("TourVideos").First(&tour, "id = ?", tourID).Error
+	err := r.PG.Conn.Preload("TourImages").Preload("TourVideos").Preload("TourPanoramas").First(&tour, "id = ?", tourID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +282,7 @@ func (r *TourismRepo) GetTourByID(tourID string) (*entity.Tour, error) {
 
 func (r *TourismRepo) GetTours() ([]entity.Tour, error) {
 	var tours []entity.Tour
-	err := r.PG.Conn.Preload("TourImages").Preload("TourVideos").Find(&tours).Error
+	err := r.PG.Conn.Preload("TourImages").Preload("TourVideos").Preload("TourPanoramas").Find(&tours).Error
 	if err != nil {
 		return nil, err
 	}
