@@ -70,6 +70,7 @@ func (p *Postgres) Migrate() error {
 		&entity.Tour{},
 		&entity.Image{},
 		&entity.Video{},
+		&entity.Panorama{},
 		&entity.User{},
 		&entity.TourEvent{},
 		&entity.Purchase{},

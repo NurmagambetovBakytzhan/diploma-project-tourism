@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"mime/multipart"
 	"net/http"
+	"path/filepath"
 	"time"
 	"tourism-backend/internal/entity"
 	"tourism-backend/internal/usecase"
@@ -45,8 +46,35 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 			protected.POST("/tour-category", r.CreateTourCategory)
 			protected.POST("/tour-location", r.CreateTourLocation)
 			protected.GET("/tour-location/:id", r.GetTourLocationByID)
+			protected.POST("/:id/", r.AddFileToTourByTourID)
 		}
 	}
+}
+
+func (r *tourismRoutes) AddFileToTourByTourID(c *gin.Context) {
+	tourID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	file, err := c.FormFile("panoramas")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file"})
+		return
+	}
+
+	filename := uuid.New().String() + filepath.Ext(file.Filename)
+	filespath := "./uploads/panoramas/" + filename
+	// Save the image file
+	if err := c.SaveUploadedFile(file, filespath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+		return
+	}
+	panoramaEntity := &entity.Panorama{PanoramaURL: filespath, TourID: tourID}
+
+	result, err := r.t.AddFileToTourByTourID(panoramaEntity)
+	c.JSON(http.StatusOK, gin.H{"message": "Image uploaded successfully", "Result": result})
+
 }
 
 // GetTourEventByID retrieves details of a specific tour event.

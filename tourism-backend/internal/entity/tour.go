@@ -15,6 +15,7 @@ type Tour struct {
 	// Relationships
 	TourImages     []Image        `json:"tour_images" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
 	TourVideos     []Video        `json:"tour_videos" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
+	TourPanoramas  []Panorama     `json:"tour_panoramas" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
 	TourEvents     []TourEvent    `json:"tour_events" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
 	TourCategories []TourCategory `json:"tour_categories" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
 	TourLocation   *TourLocation  `json:"tour_location" gorm:"foreignKey:TourID;references:ID"`
@@ -59,4 +60,12 @@ type Video struct {
 	TourID     uuid.UUID `json:"tour_id" gorm:"type:uuid;index"`
 	Tour       Tour      `gorm:"foreignKey:TourID;constraint:OnDelete:CASCADE;"`
 	VideoURL   string    `json:"video_url"`
+}
+
+type Panorama struct {
+	gorm.Model  `swaggerignore:"true"`
+	ID          uuid.UUID `json:"ID" gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
+	TourID      uuid.UUID `json:"tour_id" gorm:"type:uuid;index"`
+	Tour        Tour      `gorm:"foreignKey:TourID;constraint:OnDelete:CASCADE;"`
+	PanoramaURL string    `json:"panorama_url"`
 }
