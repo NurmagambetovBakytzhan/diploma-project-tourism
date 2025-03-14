@@ -26,7 +26,7 @@ func NewTourismRepo(pg *postgres.Postgres) *TourismRepo {
 	return &TourismRepo{pg}
 }
 
-func (r *TourismRepo) AddFileToTourByTourID(panoramaEntity *entity.Panorama) (*entity.Panorama, error) {
+func (r *TourismRepo) AddFileToTourByTourID(panoramaEntity []*entity.Panorama) ([]*entity.Panorama, error) {
 	err := r.PG.Conn.Create(&panoramaEntity).Error
 	if err != nil {
 		return nil, err
