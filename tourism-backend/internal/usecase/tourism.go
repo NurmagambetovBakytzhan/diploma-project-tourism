@@ -21,7 +21,7 @@ func NewTourismUseCase(r *repo.TourismRepo) *TourismUseCase {
 	}
 }
 
-func (r *TourismUseCase) AddFileToTourByTourID(panoramaEntity *entity.Panorama) (*entity.Panorama, error) {
+func (r *TourismUseCase) AddFilesToTourByTourID(panoramaEntity []*entity.Panorama) ([]*entity.Panorama, error) {
 	return r.repo.AddFileToTourByTourID(panoramaEntity)
 }
 

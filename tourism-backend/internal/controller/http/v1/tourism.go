@@ -46,35 +46,81 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 			protected.POST("/tour-category", r.CreateTourCategory)
 			protected.POST("/tour-location", r.CreateTourLocation)
 			protected.GET("/tour-location/:id", r.GetTourLocationByID)
-			protected.POST("/:id/", r.AddFileToTourByTourID)
+			protected.POST("/:id/", r.AddFilesToTourByTourID)
 		}
 	}
 }
 
-func (r *tourismRoutes) AddFileToTourByTourID(c *gin.Context) {
+// AddFilesToTourByTourID uploads multiple panorama images for a specific tour.
+//
+// @Summary Upload panoramas for a tour
+// @Description Allows authenticated tour providers to upload multiple panorama images for a specific tour.
+// Only the owner of the tour can upload panoramas.
+// @Tags Provider
+// @Accept multipart/form-data
+// @Produce json
+// @Param id path string true "Tour ID (UUID)"
+// @Param panoramas formData file true "Panorama images (can be multiple)"
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{} "Images uploaded successfully"
+// @Failure 400 {object} map[string]string "Invalid request format or missing required fields"
+// @Failure 403 {object} map[string]string "Unauthorized: You are not the owner of this tour"
+// @Failure 500 {object} map[string]string "Failed to save file or database error"
+// @Router /tours/provider/{id}/ [post]
+// @Security Bearer
+func (r *tourismRoutes) AddFilesToTourByTourID(c *gin.Context) {
 	tourID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	file, err := c.FormFile("panoramas")
+
+	userID := utils.GetUserIDFromContext(c)
+
+	if !r.t.CheckTourOwner(tourID, userID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized: You are not owner of this tour"})
+		return
+	}
+
+	// Parse multiple files
+	form, err := c.MultipartForm()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid form data"})
 		return
 	}
 
-	filename := uuid.New().String() + filepath.Ext(file.Filename)
-	filespath := "./uploads/panoramas/" + filename
-	// Save the image file
-	if err := c.SaveUploadedFile(file, filespath); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+	files := form.File["panoramas"]
+	if len(files) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No panoramas provided"})
 		return
 	}
-	panoramaEntity := &entity.Panorama{PanoramaURL: filespath, TourID: tourID}
 
-	result, err := r.t.AddFileToTourByTourID(panoramaEntity)
-	c.JSON(http.StatusOK, gin.H{"message": "Image uploaded successfully", "Result": result})
+	var panoramas []*entity.Panorama
 
+	for _, file := range files {
+		filename := uuid.New().String() + filepath.Ext(file.Filename)
+		filespath := "./uploads/panoramas/" + filename
+
+		// Save the image file
+		if err := c.SaveUploadedFile(file, filespath); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+			return
+		}
+
+		panoramas = append(panoramas, &entity.Panorama{
+			PanoramaURL: filespath,
+			TourID:      tourID,
+		})
+	}
+
+	// Save to database
+	result, err := r.t.AddFilesToTourByTourID(panoramas)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save panoramas to DB"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Images uploaded successfully", "result": result})
 }
 
 // GetTourEventByID retrieves details of a specific tour event.
