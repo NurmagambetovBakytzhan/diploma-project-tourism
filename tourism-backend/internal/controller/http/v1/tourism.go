@@ -376,7 +376,7 @@ func (r *tourismRoutes) PayTourEvent(c *gin.Context) {
 // CreateTourEvent handles the creation of a new tour event related to some specific tour with images and videos.
 // @Summary Create a new tour event
 // @Description Create a new tour event.
-// @Tags Tours
+// @Tags Provider
 // @Accept multipart/form-data
 // @Produce json
 // @Param description formData string true "Tour Description"
@@ -385,7 +385,7 @@ func (r *tourismRoutes) PayTourEvent(c *gin.Context) {
 // @Success 201 {object} entity.TourDocs
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /v1/tours [post]
+// @Router /v1/tours/provider/tour-event [post]
 // @Security Bearer
 func (r *tourismRoutes) CreateTourEvent(c *gin.Context) {
 	var createTourEventDTO entity.CreateTourEventDTO
@@ -475,7 +475,7 @@ func (r *tourismRoutes) GetTours(c *gin.Context) {
 // CreateTour handles the creation of a new tour with images and videos.
 // @Summary Create a new tour
 // @Description Create a new tour with images and videos.
-// @Tags Tours
+// @Tags Provider
 // @Accept multipart/form-data
 // @Produce json
 // @Param description formData string true "Tour Description"
