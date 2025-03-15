@@ -16,6 +16,15 @@ type TourismRoutes struct {
 // ReverseProxy forwards requests to the target service
 func ReverseProxy(target string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if c.Request.Method == http.MethodOptions {
+			c.Header("Access-Control-Allow-Origin", "http://localhost:4200")
+			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			c.Header("Access-Control-Allow-Headers", "Origin, Authorization, Content-Type")
+			c.Header("Access-Control-Allow-Credentials", "true")
+			c.AbortWithStatus(http.StatusNoContent) // No content response
+			return
+		}
+
 		// Build target URL
 		targetURL, err := url.Parse(target + c.Request.RequestURI)
 		if err != nil {
@@ -68,7 +77,7 @@ func ReverseProxy(target string) gin.HandlerFunc {
 func NewRoutes(router *gin.Engine, l logger.Interface) {
 	// Enable CORS
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
+		AllowOrigins:     []string{"http://localhost:4200"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
