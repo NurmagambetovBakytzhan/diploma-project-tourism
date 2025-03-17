@@ -50,16 +50,6 @@ func (p *Postgres) Connect(cfg *config.Config) error {
 		return err
 	}
 	err = p.Conn.Exec(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", cfg.PG.TablePrefix[:len(cfg.PG.TablePrefix)-1])).Error
-	query, err := ioutil.ReadFile("pkg/postgres/create_categories.sql")
-	if err != nil {
-		panic(err)
-	}
-	if err := p.Conn.Exec(string(query)).Error; err != nil {
-		panic(err)
-	}
-	if err != nil {
-		log.Fatal("Failed to create schema:", err)
-	}
 
 	p.Conn = conn
 	return nil
@@ -76,7 +66,18 @@ func (p *Postgres) Migrate() error {
 		&entity.Purchase{},
 		&entity.TourCategory{},
 		&entity.TourLocation{},
+		&entity.Category{},
 	)
+	query, err := ioutil.ReadFile("pkg/postgres/create_categories.sql")
+	if err != nil {
+		panic(err)
+	}
+	if err := p.Conn.Exec(string(query)).Error; err != nil {
+		panic(err)
+	}
+	if err != nil {
+		log.Fatal("Failed to create schema:", err)
+	}
 	if err != nil {
 		fmt.Errorf("Migrating entities to Postgres - err: %w", err)
 		return err
