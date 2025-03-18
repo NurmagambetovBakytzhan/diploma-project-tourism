@@ -1,6 +1,20 @@
 services:
-  tourism-backend:
-    container_name: tourism-backend
+  social-service:
+    container_name: social-service
+    build:
+      context: ./social-service
+    ports:
+      - "8060:8060"
+    depends_on:
+      tourism-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  tourism:
+    container_name: tourism
     build:
       context: ./tourism-backend
     ports:
