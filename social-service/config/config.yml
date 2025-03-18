@@ -1,0 +1,17 @@
+app:
+  name: 'go-clean-template'
+  version: '1.0.0'
+
+http:
+  port: '8060'
+
+logger:
+  log_level: 'debug'
+  rollbar_env: 'go-clean-template'
+
+postgres:
+  pool_max: 2
+  table_prefix: "social_service."
+
+kafka:
+  kafka_address: 'kafka:9092'
