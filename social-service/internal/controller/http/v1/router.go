@@ -29,10 +29,10 @@ func NewRouter(handler *fiber.App, l logger.Interface, csbn *casbin.Enforcer, us
 
 	// Swagger
 	swaggerHandler := adaptor.HTTPHandler(swaggerFiles.Handler)
-	handler.Get("/v1/users/swagger/*any", swaggerHandler)
+	handler.Get("/v1/social/swagger/*any", swaggerHandler)
 
 	// K8s probe
-	handler.Get("/v1/users/healthz", func(c *fiber.Ctx) error {
+	handler.Get("/v1/social/healthz", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"Service": "Social Service!"})
 	})
 

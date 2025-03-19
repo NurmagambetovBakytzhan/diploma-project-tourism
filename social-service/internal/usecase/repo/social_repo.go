@@ -3,6 +3,7 @@ package repo
 import (
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"log"
 	"social-service/internal/entity"
@@ -16,6 +17,55 @@ type SocialRepo struct {
 // New -.
 func NewSocialRepo(pg *postgres.Postgres) *SocialRepo {
 	return &SocialRepo{pg}
+}
+
+func (u *SocialRepo) GetChatMessages(ChatID uuid.UUID) ([]*entity.Message, error) {
+	var chatMessages []*entity.Message
+
+	err := u.PG.Conn.
+		Where("chat_id = ?", ChatID).
+		Order("created_at DESC").
+		Find(&chatMessages).
+		Error
+	if err != nil {
+		log.Println("Error getting chat Messages: ", err)
+		return nil, err
+	}
+	return chatMessages, nil
+}
+
+func (u *SocialRepo) PostMessage(message *entity.Message) error {
+	err := u.PG.Conn.Create(&message).Error
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (u *SocialRepo) CheckChatParticipant(chatID uuid.UUID, userID uuid.UUID) bool {
+	var count int64
+	err := u.PG.Conn.Table("social_service.chat_participants").
+		Where("chat_id = ? AND user_id = ?", chatID, userID).
+		Count(&count).Error
+	if err != nil {
+		log.Println("Error CheckChatParticipant: ", err)
+		return false
+	}
+	return count > 0
+}
+
+func (u *SocialRepo) GetMyChats(userID uuid.UUID) ([]*entity.Chat, error) {
+	var chats []*entity.Chat
+
+	err := u.PG.Conn.Joins("JOIN social_service.chat_participants ON social_service.chat_participants.chat_id = social_service.chats.id").
+		Where("social_service.chat_participants.user_id = ?", userID).
+		Find(&chats).Error
+	if err != nil {
+		log.Printf("GetMyChats Error: %v", err)
+		return nil, fmt.Errorf("GetMyChats Error")
+	}
+	return chats, nil
 }
 
 func (u *SocialRepo) EnterToChat(Chat *entity.EnterToChatDTO) (*entity.ChatParticipants, error) {

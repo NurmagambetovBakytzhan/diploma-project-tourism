@@ -3,6 +3,7 @@ package usecase
 import (
 	"encoding/json"
 	"github.com/IBM/sarama"
+	"github.com/google/uuid"
 	"log"
 	"os"
 	"social-service/internal/entity"
@@ -21,6 +22,25 @@ func NewSocialUseCase(r *repo.SocialRepo) *SocialUseCase {
 		repo: r,
 		//producer: p,
 	}
+}
+func (u *SocialUseCase) GetChatMessages(ChatID uuid.UUID) ([]*entity.Message, error) {
+	return u.repo.GetChatMessages(ChatID)
+}
+func (u *SocialUseCase) PostMessage(message *entity.Message) {
+	err := u.repo.PostMessage(message)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	// Send Notification to Chat Participants
+}
+
+func (u *SocialUseCase) CheckChatParticipant(chatID uuid.UUID, userID uuid.UUID) bool {
+	return u.repo.CheckChatParticipant(chatID, userID)
+}
+
+func (u *SocialUseCase) GetMyChats(userID uuid.UUID) ([]*entity.Chat, error) {
+	return u.repo.GetMyChats(userID)
 }
 
 func (u *SocialUseCase) EnterToChat(Chat *entity.EnterToChatDTO) (*entity.ChatParticipants, error) {

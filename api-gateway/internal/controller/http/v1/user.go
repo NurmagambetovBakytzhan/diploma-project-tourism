@@ -89,8 +89,9 @@ func NewRoutes(router *gin.Engine, l logger.Interface) {
 	//authAPI := os.Getenv("AUTH_API_PORT")       // Example: http://localhost:8090
 	tourismAPI := "http://tourism-backend:8080" // Example: http://localhost:8080
 	authAPI := "http://auth-service:8090"
+	socialAPI := "http://social-service:8060"
 
-	if tourismAPI == "" || authAPI == "" {
+	if tourismAPI == "" || authAPI == "" || socialAPI == "" {
 		panic("Environment variables for microservices (TOURISM_API_URL, AUTH_API_URL, PAYMENT_API_URL) must be set")
 	}
 
@@ -98,5 +99,5 @@ func NewRoutes(router *gin.Engine, l logger.Interface) {
 	router.Any("/v1/users/*any", ReverseProxy(authAPI))
 	router.Any("/v1/admin/*any", ReverseProxy(tourismAPI))
 	router.Any("/v1/tours/*any", ReverseProxy(tourismAPI)) // Forward to Tourism Service
-
+	router.Any("/v1/social/*any", ReverseProxy(socialAPI))
 }
