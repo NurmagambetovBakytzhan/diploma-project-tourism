@@ -47,7 +47,7 @@ func Run(cfg *config.Config) {
 	)
 	// kafka CONSUMER logic
 	kafkaBrokers := []string{"kafka:9092"}
-	groupID := "consumer-group"
+	groupID := "social-consumer-group"
 	topic := "users"
 
 	processor := usecase.NewKafkaMessageProcessor(repo.NewSocialRepo(pg))

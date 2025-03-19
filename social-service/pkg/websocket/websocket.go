@@ -8,9 +8,9 @@ import (
 type miniClient map[string]map[string]*websocket.Conn // Modified type
 
 type ClientObject struct {
-	GROUP string
-	USER  string
-	Conn  *websocket.Conn
+	ChatID string
+	UserID string
+	Conn   *websocket.Conn
 }
 
 type BroadcastObject struct {
@@ -38,17 +38,17 @@ func SocketHandler() {
 		select {
 		case client := <-Register:
 			// Pre-initialize organization map if it doesn't exist
-			if clients[client.GROUP] == nil {
-				clients[client.GROUP] = make(map[string]*websocket.Conn)
+			if clients[client.ChatID] == nil {
+				clients[client.ChatID] = make(map[string]*websocket.Conn)
 			}
-			clients[client.GROUP][client.USER] = client.Conn
-			log.Println("client registered:", client.GROUP, client.USER)
+			clients[client.ChatID][client.UserID] = client.Conn
+			log.Println("client registered:", client.ChatID, client.UserID)
 
 		case message := <-Broadcast:
 			for org, users := range clients {
-				if org == message.FROM.GROUP {
+				if org == message.FROM.ChatID {
 					for user, conn := range users {
-						if org != message.FROM.GROUP || user != message.FROM.USER {
+						if org != message.FROM.ChatID || user != message.FROM.UserID {
 							if err := conn.WriteMessage(websocket.TextMessage, []byte(message.MSG)); err != nil {
 								log.Println("write error:", err)
 								removeClient(org, user) // Update client removal
@@ -61,8 +61,8 @@ func SocketHandler() {
 			}
 
 		case client := <-Unregister:
-			removeClient(client.GROUP, client.USER) // Update client removal
-			log.Println("client Unregistered:", client.GROUP, client.USER)
+			removeClient(client.ChatID, client.UserID) // Update client removal
+			log.Println("client Unregistered:", client.ChatID, client.UserID)
 		}
 	}
 }

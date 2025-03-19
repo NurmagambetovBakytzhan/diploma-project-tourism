@@ -8,6 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -42,8 +43,8 @@ func WebSocketMiddleware() fiber.Handler {
 		if websocket.IsWebSocketUpgrade(c) {
 			c.Locals("allowed", true)
 
-			c.Locals("GROUP", string(c.Request().Header.Peek("GROUP")))
-			c.Locals("USER", string(c.Request().Header.Peek("USER")))
+			c.Locals("ChatID", string(c.Request().Header.Peek("ChatID")))
+			c.Locals("UserID", c.Locals("userID"))
 			return c.Next()
 		}
 		return fiber.ErrUpgradeRequired
@@ -115,4 +116,13 @@ func ParseFloat(value string) float64 {
 		return v
 	}
 	return 0
+}
+
+func StringToUUID(target string) uuid.UUID {
+	result, err := uuid.Parse(target)
+	if err != nil {
+		log.Println(err)
+		return uuid.Nil
+	}
+	return result
 }

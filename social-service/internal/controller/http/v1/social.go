@@ -24,36 +24,57 @@ func newSocialRoutes(handler fiber.Router, l logger.Interface, csbn *casbin.Enfo
 	h := handler.Group("/social")
 	h.Use(utils.JWTAuthMiddleware())
 	{
-		h.Post("/chat", r.CreateChat)
-		h.Post("/chat/enter", r.EnterToChat)
-		wshandler := handler.Group("/ws")
-		wshandler.Use(utils.WebSocketMiddleware())
+		chats := h.Group("/chats")
 		{
-			wshandler.Get("/", websocket.New(r.WebSocketHandler))
+			chats.Post("/", r.CreateChat)
+			chats.Post("/enter", r.EnterToChat)
+			chats.Get("/", r.GetMyChats)
+			chats.Get("/:id/messages", r.GetChatMessages)
 		}
 	}
+	wshandler := handler.Group("/ws")
+	wshandler.Use(utils.JWTAuthMiddleware(), utils.WebSocketMiddleware())
+	{
+		wshandler.Get("/", websocket.New(r.WebSocketHandler))
+	}
+
 }
 
-//
-//func (r *socialRoutes) GetAllChats(c *fiber.Ctx) error {
-//	perPage := c.Query("per_page", "10")
-//	sortOrder := c.Query("sort_order", "desc")
-//	cursor := c.Query("cursor", "")
-//	limit, err := strconv.ParseInt(perPage, 10, 64)
-//	if limit < 1 || limit > 100 {
-//		limit = 10
-//	}
-//	if err != nil {
-//		return c.Status(500).JSON("Invalid per_page option")
-//	}
-//	result, err := r.s.GetAllChats()
-//	if err != nil {
-//		log.Println(err)
-//		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error getting all chats"})
-//	}
-//
-//	return c.Status(fiber.StatusOK).JSON(fiber.Map{"chats": result})
-//}
+func (r *socialRoutes) GetChatMessages(c *fiber.Ctx) error {
+	userID := utils.GetUserIDFromContext(c)
+	chatID := c.Params("id")
+	if chatID == "" {
+		log.Println("chatID is empty")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "chat id is empty"})
+	}
+	chatUUID, err := uuid.Parse(chatID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "chat id is invalid"})
+	}
+
+	if !r.s.CheckChatParticipant(chatUUID, userID) {
+		log.Printf("User: %s is not part of the chat: %s", userID, chatUUID)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "You are not a member of this chat"})
+	}
+
+	result, err := r.s.GetChatMessages(chatUUID)
+	if err != nil {
+		log.Println(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error getting messages"})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"messages": result})
+}
+
+func (r *socialRoutes) GetMyChats(c *fiber.Ctx) error {
+	userID := utils.GetUserIDFromContext(c)
+	result, err := r.s.GetMyChats(userID)
+	if err != nil {
+		log.Println(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error getting all chats"})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"chats": result})
+}
 
 func (r *socialRoutes) EnterToChat(c *fiber.Ctx) error {
 	var chatIdStringDTO entity.ChatIdStringDTO
@@ -92,14 +113,17 @@ func (r *socialRoutes) CreateChat(c *fiber.Ctx) error {
 
 func (r *socialRoutes) WebSocketHandler(c *websocket.Conn) {
 	clientObj := pkg.ClientObject{
-		GROUP: c.Locals("GROUP").(string),
-		USER:  c.Locals("USER").(string),
-		Conn:  c,
+		ChatID: c.Locals("ChatID").(string),
+		UserID: c.Locals("UserID").(string),
+		Conn:   c,
 	}
 	defer func() {
 		pkg.Unregister <- clientObj
 		c.Close()
 	}()
+	if !r.s.CheckChatParticipant(utils.StringToUUID(clientObj.ChatID), utils.StringToUUID(clientObj.UserID)) {
+		return
+	}
 	// Register the client
 	pkg.Register <- clientObj
 	for {
@@ -112,8 +136,19 @@ func (r *socialRoutes) WebSocketHandler(c *websocket.Conn) {
 		}
 		if messageType == websocket.TextMessage {
 			// Broadcast the received message
+			msg := string(message)
+
+			go func() {
+				messageToPost := entity.Message{
+					Text:   msg,
+					UserID: utils.StringToUUID(clientObj.UserID),
+					ChatID: utils.StringToUUID(clientObj.ChatID),
+				}
+				r.s.PostMessage(&messageToPost)
+			}()
+
 			pkg.Broadcast <- pkg.BroadcastObject{
-				MSG:  string(message),
+				MSG:  msg,
 				FROM: clientObj,
 			}
 		} else {
