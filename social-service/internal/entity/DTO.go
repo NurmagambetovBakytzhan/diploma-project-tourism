@@ -28,3 +28,16 @@ type EnterToChatDTO struct {
 	ChatID uuid.UUID `json:"chatID" binding:"required"`
 	UserID uuid.UUID
 }
+
+type NotificationMessageToKafkaDTO struct {
+	Topic      string      `json:"topic" binding:"required"`
+	ChatID     uuid.UUID   `json:"chatID" binding:"required"`
+	AuthorID   uuid.UUID   `json:"authorID" binding:"required"`
+	Recipients []uuid.UUID `json:"recipients" binding:"required"`
+	Message    string      `json:"message" binding:"required"`
+}
+type Notification struct {
+	Topic      string                 `json:"topic" binding:"required"`
+	Data       map[string]interface{} `json:"data" binding:"required"`
+	Recipients []uuid.UUID            `json:"recipients" binding:"required"`
+}

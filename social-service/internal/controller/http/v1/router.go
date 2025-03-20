@@ -3,13 +3,11 @@ package v1
 
 import (
 	"github.com/casbin/casbin/v2"
-	"github.com/gofiber/fiber/v2/middleware/adaptor"
+	fiberSwagger "github.com/swaggo/fiber-swagger"
 	"social-service/internal/usecase"
 
 	"github.com/gofiber/fiber/v2"
 	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
-	swaggerFiles "github.com/swaggo/files"
-
 	// Swagger docs.
 	_ "social-service/docs"
 	"social-service/pkg/logger"
@@ -20,7 +18,7 @@ import (
 // @title       Go Clean Template API
 // @description Using a translation service as an example
 // @version     1.0
-// @host        localhost:8080
+// @host        localhost:8060
 // @BasePath    /v1
 func NewRouter(handler *fiber.App, l logger.Interface, csbn *casbin.Enforcer, usecase *usecase.SocialUseCase) {
 	// Options
@@ -28,8 +26,7 @@ func NewRouter(handler *fiber.App, l logger.Interface, csbn *casbin.Enforcer, us
 	//handler.Use(recover.New)
 
 	// Swagger
-	swaggerHandler := adaptor.HTTPHandler(swaggerFiles.Handler)
-	handler.Get("/v1/social/swagger/*any", swaggerHandler)
+	handler.Get("/v1/social/swagger/*", fiberSwagger.WrapHandler)
 
 	// K8s probe
 	handler.Get("/v1/social/healthz", func(c *fiber.Ctx) error {

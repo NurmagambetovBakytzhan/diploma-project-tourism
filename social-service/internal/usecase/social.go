@@ -5,7 +5,6 @@ import (
 	"github.com/IBM/sarama"
 	"github.com/google/uuid"
 	"log"
-	"os"
 	"social-service/internal/entity"
 	"social-service/internal/usecase/repo"
 )
@@ -16,11 +15,10 @@ type SocialUseCase struct {
 }
 
 // NewTourismUseCase -.
-// func NewSocialUseCase(r *repo.SocialRepo, p sarama.SyncProducer) *SocialUseCase {
-func NewSocialUseCase(r *repo.SocialRepo) *SocialUseCase {
+func NewSocialUseCase(r *repo.SocialRepo, p sarama.SyncProducer) *SocialUseCase {
 	return &SocialUseCase{
-		repo: r,
-		//producer: p,
+		repo:     r,
+		producer: p,
 	}
 }
 func (u *SocialUseCase) GetChatMessages(ChatID uuid.UUID) ([]*entity.Message, error) {
@@ -32,7 +30,30 @@ func (u *SocialUseCase) PostMessage(message *entity.Message) {
 		log.Println(err)
 		return
 	}
+
+	recipientList, err := u.repo.GetChatParticipants(message.ChatID)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	//kafkaMessage := entity.NotificationMessageToKafkaDTO{
+	//	Topic:      "MESSAGE",
+	//	ChatID:     message.ChatID,
+	//	AuthorID:   message.UserID,
+	//	Message:    message.Text,
+	//	Recipients: recipientList,
+	//}
+	kafkaMessage := entity.Notification{
+		Topic: "MESSAGE",
+		Data: map[string]interface{}{
+			"ChatID":   message.ChatID,
+			"AuthorID": message.UserID,
+			"Message":  message.Text,
+		},
+		Recipients: recipientList,
+	}
 	// Send Notification to Chat Participants
+	u.PublishMessage("notifications", kafkaMessage)
 
 }
 
@@ -55,8 +76,7 @@ func (u *SocialUseCase) CreateChat(chat *entity.CreateChatDTO) (*entity.Chat, er
 func (u *SocialUseCase) PublishMessage(topic string, value interface{}) {
 	jsonMessage, err := json.Marshal(value)
 	if err != nil {
-		log.Fatalln("Failed to marshal message:", err)
-		os.Exit(1)
+		log.Println("Failed to marshal message:", err)
 	}
 
 	msg := &sarama.ProducerMessage{
@@ -66,8 +86,7 @@ func (u *SocialUseCase) PublishMessage(topic string, value interface{}) {
 
 	_, _, err = u.producer.SendMessage(msg)
 	if err != nil {
-		log.Fatalln("Failed to send message:", err)
-		os.Exit(1)
+		log.Println("Failed to send message:", err)
 	}
 	log.Println("Message sent!")
 

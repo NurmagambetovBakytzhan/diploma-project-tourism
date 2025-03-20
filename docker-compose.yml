@@ -1,4 +1,19 @@
 services:
+
+  notification-service:
+    container_name: notification-service
+    build:
+      context: ./notification-service
+    ports:
+      - "8070:8070"
+    depends_on:
+      tourism-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - app_network
+
   social-service:
     container_name: social-service
     build:

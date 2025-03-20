@@ -25,6 +25,7 @@ type Notification struct {
 	UserID     string    `json:"userID" gorm:"type:uuid;default:uuid_generate_v4()" json:"userID"`
 	ChatID     string    `json:"chatID" gorm:"type:uuid;default:uuid_generate_v4()"`
 	Message    string    `json:"message" gorm:"not null" json:"message"`
+	Topic      string    `json:"type" gorm:"not null" json:"type"`
 }
 
 type NotificationToWS struct {

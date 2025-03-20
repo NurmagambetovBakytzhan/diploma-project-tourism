@@ -41,10 +41,18 @@ func Run(cfg *config.Config) {
 		l.Fatal(fmt.Errorf("app - Run - postgres.Migrate: %w", err))
 	}
 
+	// kafka Producer Logic
+	kafkaProducer, err := kafka.NewKafkaProducer(cfg.Kafka.Address)
+	if err != nil {
+		l.Fatal(fmt.Errorf("error creating kafka producer: %w", err))
+	}
+
 	// Use Case
 	socialUseCase := usecase.NewSocialUseCase(
 		repo.NewSocialRepo(pg),
+		kafkaProducer,
 	)
+
 	// kafka CONSUMER logic
 	kafkaBrokers := []string{"kafka:9092"}
 	groupID := "social-consumer-group"
@@ -67,7 +75,7 @@ func Run(cfg *config.Config) {
 	// Casbin
 	csbn := casbin.InitCasbin()
 
-	// New Router
+	// NewKafkaProducer Router
 	v1.NewRouter(handler, l, csbn, socialUseCase)
 
 	port := fmt.Sprintf(":%s", cfg.Port)

@@ -5,6 +5,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 )
@@ -28,6 +29,7 @@ func ReverseProxy(target string) gin.HandlerFunc {
 		// Build target URL
 		targetURL, err := url.Parse(target + c.Request.RequestURI)
 		if err != nil {
+			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid target URL"})
 			return
 		}
@@ -35,6 +37,7 @@ func ReverseProxy(target string) gin.HandlerFunc {
 		// Create a new request with the original method
 		req, err := http.NewRequest(c.Request.Method, targetURL.String(), c.Request.Body)
 		if err != nil {
+			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request"})
 			return
 		}
@@ -50,6 +53,7 @@ func ReverseProxy(target string) gin.HandlerFunc {
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
+			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reach service"})
 			return
 		}
@@ -58,6 +62,7 @@ func ReverseProxy(target string) gin.HandlerFunc {
 		// Read response body
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
+			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read response"})
 			return
 		}
@@ -90,14 +95,12 @@ func NewRoutes(router *gin.Engine, l logger.Interface) {
 	tourismAPI := "http://tourism-backend:8080" // Example: http://localhost:8080
 	authAPI := "http://auth-service:8090"
 	socialAPI := "http://social-service:8060"
-
-	if tourismAPI == "" || authAPI == "" || socialAPI == "" {
-		panic("Environment variables for microservices (TOURISM_API_URL, AUTH_API_URL, PAYMENT_API_URL) must be set")
-	}
+	notificationsAPI := "http://notification-service:8070"
 
 	// Auth Service Routes
 	router.Any("/v1/users/*any", ReverseProxy(authAPI))
 	router.Any("/v1/admin/*any", ReverseProxy(tourismAPI))
 	router.Any("/v1/tours/*any", ReverseProxy(tourismAPI)) // Forward to Tourism Service
 	router.Any("/v1/social/*any", ReverseProxy(socialAPI))
+	router.Any("/v1/notifications/*any", ReverseProxy(notificationsAPI))
 }

@@ -1,168 +1,36 @@
-definitions:
-  entity.Category:
-    properties:
-      ID:
-        type: string
-      name:
-        type: string
-      tourCategories:
-        items:
-          $ref: '#/definitions/entity.TourCategory'
-        type: array
-    type: object
-  entity.Image:
-    properties:
-      ID:
-        type: string
-      image_url:
-        type: string
-      tour:
-        $ref: '#/definitions/entity.Tour'
-      tour_id:
-        type: string
-    type: object
-  entity.Purchase:
-    properties:
-      ID:
-        type: string
-      Status:
-        type: string
-      TourEvent:
-        $ref: '#/definitions/entity.TourEvent'
-      TourEventID:
-        type: string
-      User:
-        $ref: '#/definitions/entity.User'
-      UserID:
-        type: string
-    type: object
-  entity.Tour:
-    properties:
-      ID:
-        type: string
-      description:
-        type: string
-      owner_id:
-        type: string
-      route:
-        type: string
-      tour_categories:
-        items:
-          $ref: '#/definitions/entity.TourCategory'
-        type: array
-      tour_events:
-        items:
-          $ref: '#/definitions/entity.TourEvent'
-        type: array
-      tour_images:
-        description: Relationships
-        items:
-          $ref: '#/definitions/entity.Image'
-        type: array
-      tour_location:
-        $ref: '#/definitions/entity.TourLocation'
-      tour_videos:
-        items:
-          $ref: '#/definitions/entity.Video'
-        type: array
-    type: object
-  entity.TourCategory:
-    properties:
-      category:
-        $ref: '#/definitions/entity.Category'
-      categoryID:
-        type: string
-      tour:
-        $ref: '#/definitions/entity.Tour'
-      tour_id:
-        type: string
-    type: object
-  entity.TourEvent:
-    properties:
-      ID:
-        type: string
-      amount:
-        type: number
-      data:
-        type: string
-      is_opened:
-        type: boolean
-      place:
-        type: string
-      price:
-        type: number
-      purchases:
-        items:
-          $ref: '#/definitions/entity.Purchase'
-        type: array
-      tour:
-        $ref: '#/definitions/entity.Tour'
-      tour_id:
-        type: string
-    type: object
-  entity.TourLocation:
-    properties:
-      ID:
-        type: string
-      latitude:
-        type: number
-      longitude:
-        type: number
-      tour:
-        $ref: '#/definitions/entity.Tour'
-      tour_id:
-        type: string
-    type: object
-  entity.User:
-    properties:
-      ID:
-        type: string
-      createdTours:
-        items:
-          $ref: '#/definitions/entity.Tour'
-        type: array
-      email:
-        type: string
-      password:
-        type: string
-      purchasedTourEvents:
-        items:
-          $ref: '#/definitions/entity.Purchase'
-        type: array
-      role:
-        description: user,admin, etc.
-        type: string
-      username:
-        type: string
-    type: object
-  entity.Video:
-    properties:
-      ID:
-        type: string
-      tour:
-        $ref: '#/definitions/entity.Tour'
-      tour_id:
-        type: string
-      video_url:
-        type: string
-    type: object
 info:
   contact: {}
 paths:
-  /admin/users:
+  /v1/notifications/ws:
     get:
       consumes:
       - application/json
-      description: Fetches a list of all registered users.
+      description: Establishes a WebSocket connection to receive real-time notifications.
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "101":
+          description: Switching Protocols
           schema:
-            items:
-              $ref: '#/definitions/entity.User'
-            type: array
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "500":
           description: Internal Server Error
           schema:
@@ -171,7 +39,12 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Get all users
+      - Bearer: []
       tags:
-      - admin
+      - notifications
+securityDefinitions:
+  Bearer:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
