@@ -4,14 +4,17 @@
         "contact": {}
     },
     "paths": {
-        "/admin/users": {
+        "/v1/notifications/ws": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
+                    },
+                    {
+                        "Bearer": []
                     }
                 ],
-                "description": "Fetches a list of all registered users.",
+                "description": "Establishes a WebSocket connection to receive real-time notifications.",
                 "consumes": [
                     "application/json"
                 ],
@@ -19,16 +22,39 @@
                     "application/json"
                 ],
                 "tags": [
-                    "admin"
+                    "notifications"
                 ],
-                "summary": "Get all users",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer Token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "101": {
+                        "description": "Switching Protocols",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.User"
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     },
@@ -45,230 +71,11 @@
             }
         }
     },
-    "definitions": {
-        "entity.Category": {
-            "type": "object",
-            "properties": {
-                "ID": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "tourCategories": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.TourCategory"
-                    }
-                }
-            }
-        },
-        "entity.Image": {
-            "type": "object",
-            "properties": {
-                "ID": {
-                    "type": "string"
-                },
-                "image_url": {
-                    "type": "string"
-                },
-                "tour": {
-                    "$ref": "#/definitions/entity.Tour"
-                },
-                "tour_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Purchase": {
-            "type": "object",
-            "properties": {
-                "ID": {
-                    "type": "string"
-                },
-                "Status": {
-                    "type": "string"
-                },
-                "TourEvent": {
-                    "$ref": "#/definitions/entity.TourEvent"
-                },
-                "TourEventID": {
-                    "type": "string"
-                },
-                "User": {
-                    "$ref": "#/definitions/entity.User"
-                },
-                "UserID": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Tour": {
-            "type": "object",
-            "properties": {
-                "ID": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "owner_id": {
-                    "type": "string"
-                },
-                "route": {
-                    "type": "string"
-                },
-                "tour_categories": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.TourCategory"
-                    }
-                },
-                "tour_events": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.TourEvent"
-                    }
-                },
-                "tour_images": {
-                    "description": "Relationships",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.Image"
-                    }
-                },
-                "tour_location": {
-                    "$ref": "#/definitions/entity.TourLocation"
-                },
-                "tour_videos": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.Video"
-                    }
-                }
-            }
-        },
-        "entity.TourCategory": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "$ref": "#/definitions/entity.Category"
-                },
-                "categoryID": {
-                    "type": "string"
-                },
-                "tour": {
-                    "$ref": "#/definitions/entity.Tour"
-                },
-                "tour_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.TourEvent": {
-            "type": "object",
-            "properties": {
-                "ID": {
-                    "type": "string"
-                },
-                "amount": {
-                    "type": "number"
-                },
-                "data": {
-                    "type": "string"
-                },
-                "is_opened": {
-                    "type": "boolean"
-                },
-                "place": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "purchases": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.Purchase"
-                    }
-                },
-                "tour": {
-                    "$ref": "#/definitions/entity.Tour"
-                },
-                "tour_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.TourLocation": {
-            "type": "object",
-            "properties": {
-                "ID": {
-                    "type": "string"
-                },
-                "latitude": {
-                    "type": "number"
-                },
-                "longitude": {
-                    "type": "number"
-                },
-                "tour": {
-                    "$ref": "#/definitions/entity.Tour"
-                },
-                "tour_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.User": {
-            "type": "object",
-            "properties": {
-                "ID": {
-                    "type": "string"
-                },
-                "createdTours": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.Tour"
-                    }
-                },
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "purchasedTourEvents": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.Purchase"
-                    }
-                },
-                "role": {
-                    "description": "user,admin, etc.",
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Video": {
-            "type": "object",
-            "properties": {
-                "ID": {
-                    "type": "string"
-                },
-                "tour": {
-                    "$ref": "#/definitions/entity.Tour"
-                },
-                "tour_id": {
-                    "type": "string"
-                },
-                "video_url": {
-                    "type": "string"
-                }
-            }
+    "securityDefinitions": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

@@ -6,7 +6,7 @@ import (
 )
 
 type Chat struct {
-	gorm.Model
+	gorm.Model  `swaggerignore:"true"`
 	ID          uuid.UUID `json:"ID" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
 	Name        string    `json:"name" gorm:"not null"`
 	Description string    `json:"description"`
@@ -25,11 +25,11 @@ type ChatParticipants struct {
 }
 
 type Message struct {
-	gorm.Model
-	ID     uuid.UUID `json:"ID" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
-	Text   string    `json:"text"`
-	UserID uuid.UUID `json:"UserID" gorm:"type:uuid"`
-	ChatID uuid.UUID `json:"ChatID" gorm:"type:uuid;index"`
-	Chat   Chat      `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE;"`
-	User   User      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;"`
+	gorm.Model `swaggerignore:"true"`
+	ID         uuid.UUID `json:"ID" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
+	Text       string    `json:"text"`
+	UserID     uuid.UUID `json:"UserID" gorm:"type:uuid"`
+	ChatID     uuid.UUID `json:"ChatID" gorm:"type:uuid;index"`
+	Chat       Chat      `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE;"`
+	User       User      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;"`
 }

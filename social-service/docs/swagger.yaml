@@ -1,104 +1,206 @@
 definitions:
-  entity.CreateUserDTO:
+  entity.Chat:
     properties:
+      ChatMessages:
+        items:
+          $ref: '#/definitions/entity.Message'
+        type: array
+      ID:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      owner:
+        $ref: '#/definitions/entity.User'
+      owner_id:
+        type: string
+    type: object
+  entity.ChatIdStringDTO:
+    properties:
+      chat_id:
+        type: string
+    type: object
+  entity.CreateChatDTO:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      userID:
+        type: string
+    required:
+    - description
+    - name
+    type: object
+  entity.Message:
+    properties:
+      ChatID:
+        type: string
+      ID:
+        type: string
+      UserID:
+        type: string
+      chat:
+        $ref: '#/definitions/entity.Chat'
+      text:
+        type: string
+      user:
+        $ref: '#/definitions/entity.User'
+    type: object
+  entity.User:
+    properties:
+      ID:
+        type: string
       email:
         type: string
       password:
-        minLength: 6
         type: string
       role:
-        description: 'Optional: "user" (default) or "admin"'
+        description: user,admin, etc.
         type: string
+      userMessages:
+        items:
+          $ref: '#/definitions/entity.Message'
+        type: array
       username:
         type: string
-    required:
-    - email
-    - password
-    - username
-    type: object
-  entity.LoginUserDTO:
-    properties:
-      password:
-        type: string
-      username:
-        type: string
-    required:
-    - password
-    - username
     type: object
 info:
   contact: {}
 paths:
-  /users:
-    post:
+  /social/chats:
+    get:
       consumes:
       - application/json
-      description: Creates a new user account with the provided details.
-      parameters:
-      - description: User registration data
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/entity.CreateUserDTO'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: User registered successfully
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Register a new user
-      tags:
-      - users
-  /users/login:
-    post:
-      consumes:
-      - application/json
-      description: Authenticates a user with their credentials and returns an access
-        token.
-      parameters:
-      - description: User login credentials
-        in: body
-        name: credentials
-        required: true
-        schema:
-          $ref: '#/definitions/entity.LoginUserDTO'
+      description: Fetches all chats where the authenticated user is a participant.
       produces:
       - application/json
       responses:
         "200":
-          description: Authentication successful
+          description: List of user's chats
           schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Bad request
-          schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
         "500":
           description: Internal server error
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
-      summary: Login a user
+      security:
+      - BearerAuth: []
+      - Bearer: []
+      summary: Get user chats
       tags:
-      - users
+      - chats
+    post:
+      consumes:
+      - application/json
+      description: Allows the user to create a new chat.
+      parameters:
+      - description: Chat creation details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/entity.CreateChatDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Created chat details
+          schema:
+            $ref: '#/definitions/entity.Chat'
+        "400":
+          description: Invalid request body
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      - Bearer: []
+      summary: Create a chat
+      tags:
+      - chats
+  /social/chats/{id}/messages:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all messages from a specific chat if the user is a participant.
+      parameters:
+      - description: Chat ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of messages
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid chat ID or user not in chat
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      - Bearer: []
+      summary: Get chat messages
+      tags:
+      - chats
+  /social/chats/enter:
+    post:
+      consumes:
+      - application/json
+      description: Adds the user to an existing chat if valid chat ID is provided.
+      parameters:
+      - description: Chat ID DTO
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/entity.ChatIdStringDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success message
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid chat ID or request body
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      - Bearer: []
+      summary: Enter a chat
+      tags:
+      - chats
+  /v1/ws:
+    get:
+      description: Manages WebSocket connections for real-time chat functionality.
+      responses: {}
+      security:
+      - BearerAuth: []
+      - Bearer: []
+      summary: WebSocket chat connection
+      tags:
+      - websocket
 swagger: "2.0"

@@ -14,15 +14,28 @@ type notificationRoutes struct {
 	l logger.Interface
 }
 
-func newTourismRoutes(handler fiber.Router, t *usecase.NotificationsUseCase, l logger.Interface) {
+func newNotificationRoutes(handler fiber.Router, t *usecase.NotificationsUseCase, l logger.Interface) {
 	r := &notificationRoutes{l}
-	wshandler := handler.Group("/ws")
+	wshandler := handler.Group("/notifications/ws")
 	wshandler.Use(utils.JWTAuthMiddleware(), utils.WebSocketMiddleware())
 	{
 		wshandler.Get("/", websocket.New(r.WebSocketHandler))
 	}
 }
 
+// WebSocketHandler @Summary WebSocket Connection for Notifications
+// @Description Establishes a WebSocket connection to receive real-time notifications.
+// @Tags notifications
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param Authorization header string true "Bearer Token"
+// @Success 101 {string} string "Switching Protocols"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /v1/notifications/ws [get]
+// @Security Bearer
 func (r *notificationRoutes) WebSocketHandler(c *websocket.Conn) {
 	clientObj := pkg.ClientObject{
 		UserID: c.Locals("userID").(string),

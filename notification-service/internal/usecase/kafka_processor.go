@@ -20,32 +20,28 @@ func NewKafkaMessageProcessor(r *repo.NotificationRepo) KafkaMessageProcessor {
 
 func (p *kafkaMessageProcessor) ProcessMessage(key, value []byte) error {
 	log.Printf("Processing Kafka message: key=%s, value=%s", key, value)
-	go p.ProcessUser(value)
+	go p.ProcessNotification(value)
 	return nil
 }
 
-func (p *kafkaMessageProcessor) ProcessUser(value []byte) {
-	notificationsEvent := &entity.NotificationMessageToKafkaDTO{}
-	err := json.Unmarshal(value, notificationsEvent)
+func (p *kafkaMessageProcessor) ProcessNotification(value []byte) {
+	notification := &entity.NotificationDTO{}
+	err := json.Unmarshal(value, notification)
 	if err != nil {
 		log.Printf("Error unmarshalling user: %v", err)
 	}
 
-	for _, recipient := range notificationsEvent.Recipients {
+	for _, recipient := range notification.Recipients {
 		pkg.Broadcast <- pkg.BroadcastObject{
-			MSG: notificationsEvent.Message,
-			FROM: pkg.ClientObject{
-				ChatID: notificationsEvent.ChatID,
-				UserID: notificationsEvent.AuthorID,
-			},
-			ChatId:    notificationsEvent.ChatID,
+			MSG:       notification.Data,
 			Recipient: recipient.String(),
 		}
 
 		notification := entity.Notification{
-			UserID:  notificationsEvent.AuthorID,
-			ChatID:  notificationsEvent.ChatID,
-			Message: notificationsEvent.Message,
+			UserID:  notification.Data["AuthorID"].(string),
+			ChatID:  notification.Data["ChatID"].(string),
+			Message: notification.Data["Message"].(string),
+			Topic:   notification.Topic,
 		}
 		err := p.repo.CreateNotification(&notification)
 		if err != nil {

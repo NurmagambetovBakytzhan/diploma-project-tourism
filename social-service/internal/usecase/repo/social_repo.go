@@ -19,6 +19,19 @@ func NewSocialRepo(pg *postgres.Postgres) *SocialRepo {
 	return &SocialRepo{pg}
 }
 
+func (u *SocialRepo) GetChatParticipants(chatID uuid.UUID) ([]uuid.UUID, error) {
+	var results []uuid.UUID
+	err := u.PG.Conn.Table("social_service.chat_participants").
+		Select("user_id").
+		Where("chat_id = ?", chatID).
+		Find(&results).Error
+	if err != nil {
+		log.Println("Error GetChatParticipants: ", err)
+		return nil, fmt.Errorf("error getting chat participants")
+	}
+	return results, nil
+}
+
 func (u *SocialRepo) GetChatMessages(ChatID uuid.UUID) ([]*entity.Message, error) {
 	var chatMessages []*entity.Message
 

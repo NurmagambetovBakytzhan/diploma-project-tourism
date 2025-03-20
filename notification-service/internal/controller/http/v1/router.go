@@ -3,9 +3,9 @@ package v1
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
-	swaggerFiles "github.com/swaggo/files"
+	fiberSwagger "github.com/swaggo/fiber-swagger"
+
 	// Swagger docs.
 	_ "notification-service/docs"
 	"notification-service/internal/usecase"
@@ -25,12 +25,11 @@ func NewRouter(handler *fiber.App, l logger.Interface, usecase *usecase.Notifica
 	//handler.Use(recover.New)
 
 	// Swagger
-	swaggerHandler := adaptor.HTTPHandler(swaggerFiles.Handler)
-	handler.Get("/v1/social/swagger/*any", swaggerHandler)
+	handler.Get("/v1/notifications/swagger/*", fiberSwagger.WrapHandler)
 
 	// K8s probe
-	handler.Get("/v1/social/healthz", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{"Service": "Social Service!"})
+	handler.Get("/v1/notifications/healthz", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{"Service": "Notification Service!"})
 	})
 
 	// Prometheus metrics
@@ -40,7 +39,7 @@ func NewRouter(handler *fiber.App, l logger.Interface, usecase *usecase.Notifica
 	// Routers
 	h := handler.Group("/v1")
 	{
-		newTourismRoutes(h, usecase, l)
+		newNotificationRoutes(h, usecase, l)
 	}
 
 }

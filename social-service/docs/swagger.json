@@ -4,9 +4,17 @@
         "contact": {}
     },
     "paths": {
-        "/users": {
-            "post": {
-                "description": "Creates a new user account with the provided details.",
+        "/social/chats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Fetches all chats where the authenticated user is a participant.",
                 "consumes": [
                     "application/json"
                 ],
@@ -14,52 +22,142 @@
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "chats"
                 ],
-                "summary": "Register a new user",
+                "summary": "Get user chats",
+                "responses": {
+                    "200": {
+                        "description": "List of user's chats",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Allows the user to create a new chat.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chats"
+                ],
+                "summary": "Create a chat",
                 "parameters": [
                     {
-                        "description": "User registration data",
-                        "name": "user",
+                        "description": "Chat creation details",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/entity.CreateUserDTO"
+                            "$ref": "#/definitions/entity.CreateChatDTO"
                         }
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "User registered successfully",
+                    "200": {
+                        "description": "Created chat details",
+                        "schema": {
+                            "$ref": "#/definitions/entity.Chat"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/social/chats/enter": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Adds the user to an existing chat if valid chat ID is provided.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chats"
+                ],
+                "summary": "Enter a chat",
+                "parameters": [
+                    {
+                        "description": "Chat ID DTO",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.ChatIdStringDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success message",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Bad request",
+                        "description": "Invalid chat ID or request body",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "additionalProperties": true
                         }
                     }
                 }
             }
         },
-        "/users/login": {
-            "post": {
-                "description": "Authenticates a user with their credentials and returns an access token.",
+        "/social/chats/{id}/messages": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieves all messages from a specific chat if the user is a participant.",
                 "consumes": [
                     "application/json"
                 ],
@@ -67,86 +165,159 @@
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "chats"
                 ],
-                "summary": "Login a user",
+                "summary": "Get chat messages",
                 "parameters": [
                     {
-                        "description": "User login credentials",
-                        "name": "credentials",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.LoginUserDTO"
-                        }
+                        "type": "string",
+                        "description": "Chat ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Authentication successful",
+                        "description": "List of messages",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Bad request",
+                        "description": "Invalid chat ID or user not in chat",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "additionalProperties": true
                         }
                     }
                 }
             }
+        },
+        "/v1/ws": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Manages WebSocket connections for real-time chat functionality.",
+                "tags": [
+                    "websocket"
+                ],
+                "summary": "WebSocket chat connection",
+                "responses": {}
+            }
         }
     },
     "definitions": {
-        "entity.CreateUserDTO": {
+        "entity.Chat": {
             "type": "object",
-            "required": [
-                "email",
-                "password",
-                "username"
-            ],
             "properties": {
-                "email": {
+                "ChatMessages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Message"
+                    }
+                },
+                "ID": {
                     "type": "string"
                 },
-                "password": {
-                    "type": "string",
-                    "minLength": 6
-                },
-                "role": {
-                    "description": "Optional: \"user\" (default) or \"admin\"",
+                "description": {
                     "type": "string"
                 },
-                "username": {
+                "name": {
+                    "type": "string"
+                },
+                "owner": {
+                    "$ref": "#/definitions/entity.User"
+                },
+                "owner_id": {
                     "type": "string"
                 }
             }
         },
-        "entity.LoginUserDTO": {
+        "entity.ChatIdStringDTO": {
+            "type": "object",
+            "properties": {
+                "chat_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.CreateChatDTO": {
             "type": "object",
             "required": [
-                "password",
-                "username"
+                "description",
+                "name"
             ],
             "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.Message": {
+            "type": "object",
+            "properties": {
+                "ChatID": {
+                    "type": "string"
+                },
+                "ID": {
+                    "type": "string"
+                },
+                "UserID": {
+                    "type": "string"
+                },
+                "chat": {
+                    "$ref": "#/definitions/entity.Chat"
+                },
+                "text": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/entity.User"
+                }
+            }
+        },
+        "entity.User": {
+            "type": "object",
+            "properties": {
+                "ID": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
                 "password": {
                     "type": "string"
+                },
+                "role": {
+                    "description": "user,admin, etc.",
+                    "type": "string"
+                },
+                "userMessages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Message"
+                    }
                 },
                 "username": {
                     "type": "string"
