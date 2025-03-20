@@ -55,7 +55,7 @@ func Run(cfg *config.Config) {
 
 	// Use case
 	notificationsUseCase := usecase.NewNotificationsUseCase(
-		repo.NewNotificationsRepo(pg),
+		repo.NewNotificationRepo(pg),
 	)
 
 	// HTTP Server

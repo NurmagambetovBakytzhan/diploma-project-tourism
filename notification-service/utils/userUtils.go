@@ -1,22 +1,22 @@
 package utils
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"net/http"
+	"log"
 )
 
-func GetUserIDFromContext(c *gin.Context) uuid.UUID {
-	userIDStr, exists := c.Get("userID")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return uuid.Nil
-	}
+func GetUserIDFromContext(c *fiber.Ctx) uuid.UUID {
+	userIDStr := c.Locals("userID")
 
 	// Convert user_id string to UUID
 	userID, err := uuid.Parse(userIDStr.(string))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+		err := c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid user ID format"})
+		if err != nil {
+			log.Println(err)
+			return [16]byte{}
+		}
 		return uuid.Nil
 	}
 	return userID

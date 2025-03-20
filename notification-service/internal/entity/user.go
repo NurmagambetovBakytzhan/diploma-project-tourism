@@ -20,12 +20,13 @@ type User struct {
 }
 
 type Notification struct {
-	gorm.Model `swaggerignore:"true"`
-	ID         uuid.UUID `json:"ID" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()" json:"ID"`
-	UserID     string    `json:"userID" gorm:"type:uuid;default:uuid_generate_v4()" json:"userID"`
-	ChatID     string    `json:"chatID" gorm:"type:uuid;default:uuid_generate_v4()"`
-	Message    string    `json:"message" gorm:"not null" json:"message"`
-	Topic      string    `json:"type" gorm:"not null" json:"type"`
+	gorm.Model  `swaggerignore:"true"`
+	ID          uuid.UUID `json:"ID" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()" json:"ID"`
+	UserID      string    `json:"userID" gorm:"type:uuid;default:uuid_generate_v4()" json:"userID"`
+	ChatID      string    `json:"chatID" gorm:"type:uuid;default:uuid_generate_v4()"`
+	Message     string    `json:"message" gorm:"not null" json:"message"`
+	Topic       string    `json:"type" gorm:"not null" json:"type"`
+	RecipientID uuid.UUID `json:"recipientID" gorm:"not null" json:"recipient"`
 }
 
 type NotificationToWS struct {

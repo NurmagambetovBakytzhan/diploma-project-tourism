@@ -38,10 +38,11 @@ func (p *kafkaMessageProcessor) ProcessNotification(value []byte) {
 		}
 
 		notification := entity.Notification{
-			UserID:  notification.Data["AuthorID"].(string),
-			ChatID:  notification.Data["ChatID"].(string),
-			Message: notification.Data["Message"].(string),
-			Topic:   notification.Topic,
+			UserID:      notification.Data["AuthorID"].(string),
+			ChatID:      notification.Data["ChatID"].(string),
+			Message:     notification.Data["Message"].(string),
+			Topic:       notification.Topic,
+			RecipientID: recipient,
 		}
 		err := p.repo.CreateNotification(&notification)
 		if err != nil {
