@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"encoding/json"
 	"github.com/gofiber/contrib/websocket"
 	"log"
 )
@@ -49,7 +50,15 @@ func SocketHandler() {
 				if org == message.FROM.ChatID {
 					for user, conn := range users {
 						if org != message.FROM.ChatID || user != message.FROM.UserID {
-							if err := conn.WriteMessage(websocket.TextMessage, []byte(message.MSG)); err != nil {
+							msgPayload, err := json.Marshal(map[string]interface{}{
+								"message": message.MSG,
+								"from":    message.FROM,
+							})
+							if err != nil {
+								log.Println("Error marshalling message:", err)
+								continue
+							}
+							if err := conn.WriteMessage(websocket.TextMessage, msgPayload); err != nil {
 								log.Println("write error:", err)
 								removeClient(org, user) // Update client removal
 								conn.WriteMessage(websocket.CloseMessage, []byte{})
