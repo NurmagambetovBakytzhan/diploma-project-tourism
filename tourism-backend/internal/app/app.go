@@ -50,6 +50,11 @@ func Run(cfg *config.Config) {
 		l.Fatal(fmt.Errorf("app - Run - postgres.Migrate: %w", err))
 	}
 
+	kafkaProducer, err := kafka.NewKafkaProducer(cfg.Kafka.Address)
+	if err != nil {
+		l.Fatal(fmt.Errorf("error creating kafka producer: %w", err))
+	}
+
 	// kafka CONSUMER logic
 	kafkaBrokers := []string{"kafka:9092"}
 	groupID := "consumer-group"
@@ -69,6 +74,7 @@ func Run(cfg *config.Config) {
 	// Use case
 	tourismUseCase := usecase.NewTourismUseCase(
 		repo.NewTourismRepo(pg),
+		kafkaProducer,
 	)
 	adminUseCase := usecase.NewAdminUseCase(
 		repo.NewAdminRepo(pg),

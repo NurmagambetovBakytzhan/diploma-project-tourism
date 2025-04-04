@@ -11,11 +11,11 @@ import (
 type (
 	// Config -.
 	Config struct {
-		App  `yaml:"app"`
-		HTTP `yaml:"http"`
-		Log  `yaml:"logger"`
-		PG   `yaml:"postgres"`
-		//RMQ  `yaml:"rabbitmq"`
+		App   `yaml:"app"`
+		HTTP  `yaml:"http"`
+		Log   `yaml:"logger"`
+		PG    `yaml:"postgres"`
+		Kafka `yaml:"kafka"`
 	}
 
 	// App -.
@@ -39,6 +39,10 @@ type (
 		//PoolMax int    `env-required:"true" yaml:"pool_max" env:"PG_POOL_MAX"`
 		URL         string `env-required:"true"                 env:"PG_URL"`
 		TablePrefix string `env:"PG_TABLE_PREFIX" yaml:"table_prefix" env-required:"false"`
+	}
+
+	Kafka struct {
+		Address string `yaml:"kafka_address"`
 	}
 
 	// RMQ -.

@@ -17,4 +17,5 @@ type TourEvent struct {
 	IsOpened       bool       `json:"is_opened" gorm:"not null;default:true"`
 	TourID         uuid.UUID  `json:"tour_id" gorm:"type:uuid;index"`
 	Purchases      []Purchase `gorm:"foreignKey:TourEventID;references:ID"`
+	InstaPostURL   string     `json:"insta_post_url"`
 }

@@ -23,12 +23,37 @@ func newUserRoutes(handler *gin.RouterGroup, t usecase.UserInterface, l logger.I
 		//h.GET("/", r.GetTours)
 		h.POST("/", r.RegisterUser)
 		h.POST("/login", r.LoginUser)
+
+		protected := h.Group("/")
+		protected.Use(utils.JWTAuthMiddleware())
+		{
+			protected.GET("/me", r.GetMe)
+		}
 	}
 	adm := handler.Group("/admin")
 	adm.Use(utils.JWTAuthMiddleware(), utils.CasbinMiddleware(csbn))
 	{
 		adm.GET("/users", r.GetUsers)
 	}
+}
+
+// GetMe godoc
+// @Summary Get current user info
+// @Description Returns the information of the currently authenticated user
+// @Tags Users
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} entity.User
+// @Failure 500 {object} map[string]string
+// @Router v1/users/me [get]
+func (r *userRoutes) GetMe(c *gin.Context) {
+	userID := utils.GetUserIDFromContext(c)
+
+	result, err := r.t.GetMe(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 func (r *userRoutes) GetUsers(c *gin.Context) {

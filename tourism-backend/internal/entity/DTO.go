@@ -57,6 +57,7 @@ type CreateTourEventDTO struct {
 	Place          string    `json:"place" gorm:"not null"`
 	TourID         uuid.UUID `json:"tour_id" gorm:"type:uuid;index"`
 	AmountOfPlaces float64   `json:"amount_of_places" gorm:"not null"`
+	InstaPostURL   string    `json:"insta_post_url"`
 }
 
 type CreateTourCategoryDTO struct {
@@ -76,4 +77,10 @@ type TourEventFilter struct {
 	EndDate     time.Time   `json:"end_date,omitempty"`
 	MinPrice    float64     `json:"min_price,omitempty"`
 	MaxPrice    float64     `json:"max_price,omitempty"`
+}
+
+type Notification struct {
+	Topic      string                 `json:"topic" binding:"required"`
+	Data       map[string]interface{} `json:"data" binding:"required"`
+	Recipients []uuid.UUID            `json:"recipients" binding:"required"`
 }
