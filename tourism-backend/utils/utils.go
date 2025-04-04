@@ -44,7 +44,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		}
 
 		tokenStr = strings.TrimPrefix(tokenStr, "Bearer ")
-
+	
 		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 			return jwtSecret, nil
 		})

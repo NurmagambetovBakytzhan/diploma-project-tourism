@@ -1,8 +1,11 @@
 package usecase
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/IBM/sarama"
 	"github.com/google/uuid"
+	"log"
 	"mime/multipart"
 	"tourism-backend/internal/entity"
 	"tourism-backend/internal/usecase/repo"
@@ -11,13 +14,15 @@ import (
 
 // TranslationUseCase -.
 type TourismUseCase struct {
-	repo *repo.TourismRepo
+	repo     *repo.TourismRepo
+	producer sarama.SyncProducer
 }
 
 // NewTourismUseCase -.
-func NewTourismUseCase(r *repo.TourismRepo) *TourismUseCase {
+func NewTourismUseCase(r *repo.TourismRepo, p sarama.SyncProducer) *TourismUseCase {
 	return &TourismUseCase{
-		repo: r,
+		repo:     r,
+		producer: p,
 	}
 }
 
@@ -67,7 +72,24 @@ func (t *TourismUseCase) CreatePurchase(purchase *entity.Purchase) (*entity.Purc
 }
 
 func (t *TourismUseCase) PayTourEvent(purchase *entity.Purchase) error {
-	return t.repo.PayTourEvent(purchase)
+	result := t.repo.PayTourEvent(purchase)
+	if result == nil {
+		log.Printf("Error paying tour event: ", result)
+		return fmt.Errorf("Error paying tour event")
+	}
+
+	kafkaMessage := entity.Notification{
+		Topic: "PAYMENT",
+		Data: map[string]interface{}{
+			"Text":    "Your payment processed successfully",
+			"Payment": result,
+		},
+		Recipients: []uuid.UUID{purchase.UserID},
+	}
+
+	t.PublishMessage("notifications", kafkaMessage)
+
+	return nil
 }
 
 func (t *TourismUseCase) CheckTourOwner(tourID uuid.UUID, userID uuid.UUID) bool {
@@ -105,4 +127,23 @@ func (t *TourismUseCase) GetTours() ([]entity.Tour, error) {
 		return nil, err
 	}
 	return tours, nil
+}
+
+func (t *TourismUseCase) PublishMessage(topic string, value interface{}) {
+	jsonMessage, err := json.Marshal(value)
+	if err != nil {
+		log.Println("Failed to marshal message:", err)
+	}
+
+	msg := &sarama.ProducerMessage{
+		Topic: topic,
+		Value: sarama.StringEncoder(jsonMessage),
+	}
+
+	_, _, err = t.producer.SendMessage(msg)
+	if err != nil {
+		log.Println("Failed to send message:", err)
+	}
+	log.Println("Message sent!")
+
 }

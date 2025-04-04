@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"io"
+	"log"
 	"mime/multipart"
 	"os"
 	"path/filepath"
@@ -207,17 +208,31 @@ func (r *TourismRepo) CreatePurchase(purchase *entity.Purchase) (*entity.Purchas
 	return purchase, nil
 }
 
-func (r *TourismRepo) PayTourEvent(purchase *entity.Purchase) error {
+func (r *TourismRepo) PayTourEvent(purchase *entity.Purchase) *entity.Purchase {
 
-	result := r.PG.Conn.Model(&entity.Purchase{}).
+	result := r.PG.Conn.Model(&purchase).
 		Where("id = ? AND status = ?", purchase.ID, "Processing").
 		Update("status", "Paid")
 
 	if result.Error != nil {
-		return result.Error
+		log.Printf("Error Processing tour event PayTourEvent: %s, \n ERROR:  %w \n", result, result.Error)
+
+		err := r.PG.Conn.Model(&purchase).
+			Where("id = ? AND status = ?", purchase.ID, "Paid").
+			Update("status", "Failed").Error
+		if err != nil {
+			log.Println("Error Failing Purchase: ", err)
+		}
+		err = r.PG.Conn.Model(&purchase).
+			Where("id = ?", purchase.TourEventID).
+			UpdateColumn("amount_of_places", gorm.Expr("amount_of_places + 1")).Error
+		if err != nil {
+			log.Println("Error Increasing Amount of Places: ", err)
+		}
+		return nil
 	}
 
-	return nil
+	return purchase
 }
 
 func (r *TourismRepo) CheckTourOwner(tourID uuid.UUID, userID uuid.UUID) bool {

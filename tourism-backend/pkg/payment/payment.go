@@ -42,6 +42,7 @@ func (p *PaymentProcessor) ProcessPurchases() {
 			err := p.tourismUsecase.PayTourEvent(purchase)
 			if err != nil {
 				log.Printf("Payment processing error: %v\n", err)
+				continue
 			}
 			log.Printf("Payment successful for User %s on TourEvent %s\n", purchase.UserID, purchase.TourEventID)
 		} else {

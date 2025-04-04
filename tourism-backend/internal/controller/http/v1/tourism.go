@@ -377,12 +377,10 @@ func (r *tourismRoutes) PayTourEvent(c *gin.Context) {
 // @Summary Create a new tour event
 // @Description Create a new tour event.
 // @Tags Provider
-// @Accept multipart/form-data
+// @Accept json
 // @Produce json
-// @Param description formData string true "Tour Description"
-// @Param route formData string true "Tour Route"
-// @Param price formData int true "Tour Price"
-// @Success 201 {object} entity.TourDocs
+// @Param event body entity.CreateTourEventDTO true "Tour Event Details"
+// @Success 201 {object} entity.CreateTourEventDTO
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /v1/tours/provider/tour-event [post]
@@ -409,6 +407,7 @@ func (r *tourismRoutes) CreateTourEvent(c *gin.Context) {
 		Price:          createTourEventDTO.Price,
 		Place:          createTourEventDTO.Place,
 		AmountOfPlaces: createTourEventDTO.AmountOfPlaces,
+		InstaPostURL:   createTourEventDTO.InstaPostURL,
 	}
 
 	createdTourEvent, err := r.t.CreateTourEvent(tour)

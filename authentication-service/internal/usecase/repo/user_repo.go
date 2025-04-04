@@ -4,6 +4,8 @@ import (
 	"authentication-service/internal/entity"
 	"authentication-service/pkg/postgres"
 	"fmt"
+	"github.com/google/uuid"
+	"log"
 )
 
 type UserRepo struct {
@@ -13,6 +15,17 @@ type UserRepo struct {
 // New -.
 func NewUserRepo(pg *postgres.Postgres) *UserRepo {
 	return &UserRepo{pg}
+}
+
+func (u *UserRepo) GetMe(id uuid.UUID) (*entity.User, error) {
+	var user entity.User
+
+	err := u.PG.Conn.Find(&user, "id = ?", id).Error
+	if err != nil {
+		log.Println("Error GetMe: ", err)
+		return nil, fmt.Errorf("Error Getting Your Information")
+	}
+	return &user, nil
 }
 
 func (u *UserRepo) GetUsers() ([]*entity.User, error) {

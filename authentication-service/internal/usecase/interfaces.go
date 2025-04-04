@@ -3,6 +3,7 @@ package usecase
 
 import (
 	"authentication-service/internal/entity"
+	"github.com/google/uuid"
 )
 
 //go:generate mockgen -source=interfaces.go -destination=./mocks_test.go -package=usecase_test
@@ -12,5 +13,6 @@ type (
 		LoginUser(user *entity.LoginUserDTO) (string, error)
 		RegisterUser(user *entity.User) (*entity.User, error)
 		GetUsers() ([]*entity.User, error)
+		GetMe(id uuid.UUID) (*entity.User, error)
 	}
 )

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/IBM/sarama"
+	"github.com/google/uuid"
 	"log"
 	"os"
 )
@@ -22,6 +23,10 @@ func NewUserUseCase(r *repo.UserRepo, p sarama.SyncProducer) *UserUseCase {
 		repo:     r,
 		producer: p,
 	}
+}
+
+func (a *UserUseCase) GetMe(id uuid.UUID) (*entity.User, error) {
+	return a.repo.GetMe(id)
 }
 
 func (a *UserUseCase) GetUsers() ([]*entity.User, error) {
