@@ -45,7 +45,7 @@ func newUserRoutes(handler *gin.RouterGroup, t usecase.UserInterface, l logger.I
 // @Produce json
 // @Success 200 {object} entity.User
 // @Failure 500 {object} map[string]string
-// @Router v1/users/me [get]
+// @Router /v1/users/me [get]
 func (r *userRoutes) GetMe(c *gin.Context) {
 	userID := utils.GetUserIDFromContext(c)
 
