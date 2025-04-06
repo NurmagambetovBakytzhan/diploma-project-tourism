@@ -109,6 +109,7 @@ func (t *TourismUseCase) CreateTourEvent(tourEvent *entity.TourEvent) (*entity.T
 	if err != nil {
 		return nil, fmt.Errorf("create tour event: %w", err)
 	}
+
 	return tourEvent, nil
 }
 
