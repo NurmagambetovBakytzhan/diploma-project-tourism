@@ -4,6 +4,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"log"
 	"os"
 	"os/signal"
@@ -11,8 +12,6 @@ import (
 	"tourism-backend/pkg/casbin"
 	"tourism-backend/pkg/kafka"
 	"tourism-backend/pkg/payment"
-
-	"github.com/gin-gonic/gin"
 
 	"tourism-backend/config"
 	v1 "tourism-backend/internal/controller/http/v1"
@@ -70,7 +69,13 @@ func Run(cfg *config.Config) {
 	defer cancel()
 
 	go consumer.ConsumeMessages(ctx)
-
+	//
+	//telegramClient, err := telegram.PrepareTelegram()
+	//if err != nil {
+	//	log.Println("PREPARE TELEGRAM ERROR: ", err)
+	//	os.Exit(1)
+	//}
+	//fmt.Println(telegramClient)
 	// Use case
 	tourismUseCase := usecase.NewTourismUseCase(
 		repo.NewTourismRepo(pg),
