@@ -35,6 +35,15 @@ func (r *TourismRepo) AddFileToTourByTourID(panoramaEntity []*entity.Panorama) (
 	return panoramaEntity, nil
 }
 
+func (r *TourismRepo) ChangeTour(tour *entity.Tour) (*entity.Tour, error) {
+	err := r.PG.Conn.Model(&tour).Updates(tour).Error
+	if err != nil {
+		log.Println("TourismRepo ChangeTour err: ", err)
+		return nil, fmt.Errorf("TourismRepo ChangeTour Error")
+	}
+	return tour, nil
+}
+
 func (r *TourismRepo) GetWeatherInfoByTourEventID(tourEventID uuid.UUID) (*entity.WeatherInfoRQ, error) {
 	var result struct {
 		Date      time.Time

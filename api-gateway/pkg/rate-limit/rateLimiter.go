@@ -18,7 +18,7 @@ var (
 	mu        sync.Mutex
 	clients   = make(map[string]*clientInfo)
 	rateLimit = rate.Limit(1)
-	burst     = 3
+	burst     = 10
 	banTime   = 10 * time.Second // ban duration
 )
 
