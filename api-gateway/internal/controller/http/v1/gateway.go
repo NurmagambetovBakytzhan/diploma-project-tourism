@@ -18,11 +18,12 @@ type TourismRoutes struct {
 func ReverseProxy(target string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Method == http.MethodOptions {
+
 			c.Header("Access-Control-Allow-Origin", "http://localhost:4200")
 			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 			c.Header("Access-Control-Allow-Headers", "Origin, Authorization, Content-Type")
 			c.Header("Access-Control-Allow-Credentials", "true")
-			c.AbortWithStatus(http.StatusNoContent) // No content response
+			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
 
@@ -45,7 +46,7 @@ func ReverseProxy(target string) gin.HandlerFunc {
 		// Copy headers from original request
 		for key, values := range c.Request.Header {
 			for _, value := range values {
-				req.Header.Add(key, value)
+				req.Header.Set(key, value)
 			}
 		}
 
@@ -73,6 +74,11 @@ func ReverseProxy(target string) gin.HandlerFunc {
 				c.Writer.Header().Add(key, value)
 			}
 		}
+
+		c.Header("Access-Control-Allow-Origin", "http://localhost:4200")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Origin, Authorization, Content-Type")
+		c.Header("Access-Control-Allow-Credentials", "true")
 
 		// Set status code and write response
 		c.Status(resp.StatusCode)
