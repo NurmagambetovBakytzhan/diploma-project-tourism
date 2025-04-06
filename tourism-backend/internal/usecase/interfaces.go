@@ -29,11 +29,9 @@ type (
 		GetTourEventByID(id uuid.UUID) (*entity.TourEvent, error)
 		AddFilesToTourByTourID(panoramasEntity []*entity.Panorama) ([]*entity.Panorama, error)
 		ChangeTour(tour *entity.Tour) (*entity.Tour, error)
+		GetMe(id uuid.UUID) (*entity.User, error)
 	}
-	UserInterface interface {
-		LoginUser(user *entity.LoginUserDTO) (string, error)
-		RegisterUser(user *entity.User) (*entity.User, error)
-	}
+
 	AdminInterface interface {
 		GetUsers() ([]*entity.User, error)
 	}

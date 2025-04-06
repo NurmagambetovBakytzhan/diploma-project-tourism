@@ -25,6 +25,11 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 	r := &tourismRoutes{t, l, payment}
 	h := handler.Group("/tours")
 	{
+		user := h.Group("/users")
+		user.Use(utils.JWTAuthMiddleware())
+		{
+			user.GET("/me", r.GetMe)
+		}
 		h.GET("/v1/tours/uploads/:type/:filename", r.GetStaticFiles)
 		h.GET("/", r.GetTours)
 		h.GET("/:id", r.GetTourByID)
@@ -50,6 +55,27 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 			protected.PATCH("/", r.ChangeTour)
 		}
 	}
+}
+
+// GetMe godoc
+// @Summary Get current user info
+// @Description Returns the information of the currently authenticated user
+// @Tags Users
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} entity.User
+// @Failure 500 {object} map[string]string
+// @Router /v1/tours/users/me [get]
+// @Security Bearer
+func (r *tourismRoutes) GetMe(c *gin.Context) {
+	userID := utils.GetUserIDFromContext(c)
+
+	result, err := r.t.GetMe(userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 // ChangeTour godoc

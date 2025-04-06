@@ -26,6 +26,10 @@ func NewTourismUseCase(r *repo.TourismRepo, p sarama.SyncProducer) *TourismUseCa
 	}
 }
 
+func (r *TourismUseCase) GetMe(id uuid.UUID) (*entity.User, error) {
+	return r.repo.GetMe(id)
+}
+
 func (r *TourismUseCase) ChangeTour(tour *entity.Tour) (*entity.Tour, error) {
 	return r.repo.ChangeTour(tour)
 }

@@ -14,12 +14,13 @@ type Tour struct {
 	Name            string    `json:"name"`
 	TelegramChatURL string    `json:"telegram_chat_url"`
 	// Relationships
-	TourImages     []Image        `json:"tour_images" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
-	TourVideos     []Video        `json:"tour_videos" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
-	TourPanoramas  []Panorama     `json:"tour_panoramas" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
-	TourEvents     []TourEvent    `json:"tour_events" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
-	TourCategories []TourCategory `json:"tour_categories" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
-	TourLocation   *TourLocation  `json:"tour_location" gorm:"foreignKey:TourID;references:ID"`
+	TourImages        []Image         `json:"tour_images" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
+	TourVideos        []Video         `json:"tour_videos" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
+	TourPanoramas     []Panorama      `json:"tour_panoramas" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
+	TourEvents        []TourEvent     `json:"tour_events" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
+	TourCategories    []TourCategory  `json:"tour_categories" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
+	TourLocation      *TourLocation   `json:"tour_location" gorm:"foreignKey:TourID;references:ID"`
+	TourUserFavorites []UserFavorites `json:"tour_user_favorites" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
 }
 
 type Category struct {

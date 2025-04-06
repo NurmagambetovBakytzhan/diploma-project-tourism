@@ -27,6 +27,21 @@ func NewTourismRepo(pg *postgres.Postgres) *TourismRepo {
 	return &TourismRepo{pg}
 }
 
+func (r *TourismRepo) GetMe(id uuid.UUID) (*entity.User, error) {
+	var user entity.User
+	err := r.PG.Conn.
+		Preload("CreatedTours").
+		Preload("PurchasedTourEvents").
+		Preload("FavoriteTours").
+		First(&user, id).
+		Error
+	if err != nil {
+		log.Println("TourismRepo.GetMe: ", err)
+		return nil, fmt.Errorf("user not found")
+	}
+	return &user, nil
+}
+
 func (r *TourismRepo) AddFileToTourByTourID(panoramaEntity []*entity.Panorama) ([]*entity.Panorama, error) {
 	err := r.PG.Conn.Create(&panoramaEntity).Error
 	if err != nil {
