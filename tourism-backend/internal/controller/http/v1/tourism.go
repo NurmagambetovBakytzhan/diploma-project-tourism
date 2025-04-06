@@ -47,8 +47,46 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 			protected.POST("/tour-location", r.CreateTourLocation)
 			protected.GET("/tour-location/:id", r.GetTourLocationByID)
 			protected.POST("/:id/", r.AddFilesToTourByTourID)
+			protected.PATCH("/", r.ChangeTour)
 		}
 	}
+}
+
+// ChangeTour godoc
+// @Summary Change an existing tour
+// @Description Updates the details of a tour. Only the tour owner (provider) can modify their tours.
+// @Tags Provider
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param ChangeTour body entity.Tour true "Tour object to update"
+// @Success 200 {object} entity.Tour "Updated tour info"
+// @Failure 400 {object} map[string]string "Bad request - invalid body"
+// @Failure 403 {object} map[string]string "Forbidden - not the owner"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /tours/provider [patch]
+// @Security Bearer
+func (r *tourismRoutes) ChangeTour(c *gin.Context) {
+	var changeTour entity.Tour
+
+	if err := c.ShouldBind(&changeTour); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if !r.t.CheckTourOwner(changeTour.ID, utils.GetUserIDFromContext(c)) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+		return
+	}
+
+	result, err := r.t.ChangeTour(&changeTour)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+	return
 }
 
 // AddFilesToTourByTourID uploads multiple panorama images for a specific tour.
@@ -510,7 +548,7 @@ func (r *tourismRoutes) CreateTour(c *gin.Context) {
 
 	description := c.PostForm("description")
 	route := c.PostForm("route")
-
+	name := c.PostForm("name")
 	form, _ := c.MultipartForm()
 	var imageFiles []*multipart.FileHeader
 	var videoFiles []*multipart.FileHeader
@@ -527,6 +565,7 @@ func (r *tourismRoutes) CreateTour(c *gin.Context) {
 		Description: description,
 		Route:       route,
 		OwnerID:     userID,
+		Name:        name,
 	}
 
 	createdTour, err := r.t.CreateTour(tour, imageFiles, videoFiles)

@@ -6,12 +6,13 @@ import (
 )
 
 type Tour struct {
-	gorm.Model  `swaggerignore:"true"`
-	ID          uuid.UUID `json:"ID" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
-	Description string    `json:"description"`
-	Route       string    `json:"route"`
-	OwnerID     uuid.UUID `json:"owner_id" gorm:"type:uuid;index"`
-
+	gorm.Model      `swaggerignore:"true"`
+	ID              uuid.UUID `json:"ID" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
+	Description     string    `json:"description"`
+	Route           string    `json:"route"`
+	OwnerID         uuid.UUID `json:"owner_id" gorm:"type:uuid;index"`
+	Name            string    `json:"name"`
+	TelegramChatURL string    `json:"telegram_chat_url"`
 	// Relationships
 	TourImages     []Image        `json:"tour_images" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
 	TourVideos     []Video        `json:"tour_videos" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`

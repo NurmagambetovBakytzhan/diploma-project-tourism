@@ -26,6 +26,10 @@ func NewTourismUseCase(r *repo.TourismRepo, p sarama.SyncProducer) *TourismUseCa
 	}
 }
 
+func (r *TourismUseCase) ChangeTour(tour *entity.Tour) (*entity.Tour, error) {
+	return r.repo.ChangeTour(tour)
+}
+
 func (r *TourismUseCase) AddFilesToTourByTourID(panoramaEntity []*entity.Panorama) ([]*entity.Panorama, error) {
 	return r.repo.AddFileToTourByTourID(panoramaEntity)
 }

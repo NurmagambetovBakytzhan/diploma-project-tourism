@@ -23,6 +23,11 @@ import (
 // @version     1.0
 // @host        localhost:8080
 // @BasePath    /v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
+// @Security BearerAuth
 func NewRouter(handler *gin.Engine, l logger.Interface, usecase *usecase.UserUseCase, csbn *casbin.Enforcer) {
 	// Options
 	handler.Use(gin.Logger())

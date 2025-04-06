@@ -41,11 +41,12 @@ func newUserRoutes(handler *gin.RouterGroup, t usecase.UserInterface, l logger.I
 // @Summary Get current user info
 // @Description Returns the information of the currently authenticated user
 // @Tags Users
-// @Security BearerAuth
 // @Produce json
+// @Security BearerAuth
 // @Success 200 {object} entity.User
 // @Failure 500 {object} map[string]string
 // @Router /v1/users/me [get]
+// @Security Bearer
 func (r *userRoutes) GetMe(c *gin.Context) {
 	userID := utils.GetUserIDFromContext(c)
 
