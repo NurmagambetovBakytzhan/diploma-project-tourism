@@ -4,6 +4,7 @@ import (
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
@@ -29,13 +30,18 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 		user.Use(utils.JWTAuthMiddleware())
 		{
 			user.GET("/me", r.GetMe)
+			user.POST("/like", r.LikeTour)
 		}
 		h.GET("/v1/tours/uploads/:type/:filename", r.GetStaticFiles)
 		h.GET("/", r.GetTours)
 		h.GET("/:id", r.GetTourByID)
 		h.GET("/categories", r.GetAllCategories)
 		h.GET("/tour-events", r.GetFilteredTourEvents)
-		h.GET("/tour-events/:id", r.GetTourEventByID)
+		usertracking := h.Group("/")
+		usertracking.Use(utils.JWTAuthMiddleware())
+		{
+			usertracking.GET("/tour-events/:id", r.GetTourEventByID)
+		}
 		h.GET("/tour-events/:id/weather", r.GetWeatherByTourEventID)
 		pay := h.Group("/payment")
 		pay.Use(utils.JWTAuthMiddleware())
@@ -55,6 +61,34 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 			protected.PATCH("/", r.ChangeTour)
 		}
 	}
+}
+
+// LikeTour godoc
+// @Summary      Like a tour
+// @Description  Allows a user to like a specific tour
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Param        likeTourDTO  body      entity.LikeTourDTO  true  "Tour ID to like"
+// @Success      200          {object}  entity.UserFavorites
+// @Failure 500 {object} map[string]string
+// @Security     BearerAuth
+// @Router       /v1/tours/users/like [post]
+func (r *tourismRoutes) LikeTour(c *gin.Context) {
+	var likeTourDTO entity.LikeTourDTO
+
+	if err := c.ShouldBindJSON(&likeTourDTO); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userID := utils.GetUserIDFromContext(c)
+	tourIDUUID, err := uuid.Parse(likeTourDTO.TourID)
+	result, err := r.t.LikeTour(userID, tourIDUUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 // GetMe godoc
@@ -197,13 +231,17 @@ func (r *tourismRoutes) AddFilesToTourByTourID(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /v1/tours/tour-events/{id} [get]
 func (r *tourismRoutes) GetTourEventByID(c *gin.Context) {
+	userID := utils.GetUserIDFromContext(c)
+
 	tourEventID, err := uuid.Parse(c.Param("id"))
 
 	tourEvent, err := r.t.GetTourEventByID(tourEventID)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	go r.t.TrackUserAction(userID, tourEvent.TourID)
 
 	c.JSON(http.StatusOK, tourEvent)
 }
@@ -453,6 +491,7 @@ func (r *tourismRoutes) CreateTourEvent(c *gin.Context) {
 	var createTourEventDTO entity.CreateTourEventDTO
 
 	if err := c.ShouldBindJSON(&createTourEventDTO); err != nil {
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

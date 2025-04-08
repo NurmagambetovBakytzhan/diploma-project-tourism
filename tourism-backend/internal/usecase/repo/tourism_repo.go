@@ -27,6 +27,35 @@ func NewTourismRepo(pg *postgres.Postgres) *TourismRepo {
 	return &TourismRepo{pg}
 }
 
+func (r *TourismRepo) CreateUserAction(userID, tourEventID uuid.UUID) {
+	userAction := entity.UserActivity{
+		UserID: userID,
+		TourID: tourEventID,
+	}
+	err := r.PG.Conn.Create(&userAction).Error
+	if err != nil {
+		log.Printf("Error creating userAction: %v\n", err)
+	}
+	return
+}
+
+func (r *TourismRepo) LikeTour(userID uuid.UUID, tourID uuid.UUID) (*entity.UserFavorites, error) {
+	var count int64
+
+	tourFavorite := entity.UserFavorites{
+		UserID: userID,
+		TourID: tourID,
+	}
+	r.PG.Conn.Model(&tourFavorite).Where("user_id = ?").Count(&count)
+	err := r.PG.Conn.Create(&tourFavorite).Error
+	if err != nil {
+		log.Println("LikeTour err:", err)
+		return nil, fmt.Errorf("Error Liking Tour \n")
+	}
+
+	return &tourFavorite, nil
+}
+
 func (r *TourismRepo) GetMe(id uuid.UUID) (*entity.User, error) {
 	var user entity.User
 	err := r.PG.Conn.
@@ -100,36 +129,36 @@ func (r *TourismRepo) GetTourEventByID(id uuid.UUID) (*entity.TourEvent, error) 
 }
 
 func (r *TourismRepo) GetFilteredTourEvents(filter *entity.TourEventFilter) ([]*entity.TourEvent, error) {
+	log.Println(filter)
 	var tourEvents []*entity.TourEvent
 
 	query := r.PG.Conn.
-		Joins("JOIN tours ON tours.id = tour_events.tour_id").
-		Joins("JOIN tour_categories ON tour_categories.tour_id = tours.id").
-		Where("tour_events.is_opened = ?", true) // Fetch only open tours
+		Joins("LEFT JOIN tourism.tours ON tourism.tours.id = tourism.tour_events.tour_id").
+		Joins("LEFT JOIN tourism.tour_categories ON tourism.tour_categories.tour_id = tourism.tours.id").
+		Where("tourism.tour_events.is_opened = ?", true)
 
 	// Filter by categories
 	if len(filter.CategoryIDs) > 0 {
-		query = query.Where("tour_categories.category_id IN ?", filter.CategoryIDs)
+		query = query.Where("tourism.tour_categories.category_id IN ?", filter.CategoryIDs)
 	}
 
 	// Filter by start date
 	if !filter.StartDate.IsZero() {
-		query = query.Where("tour_events.date >= ?", filter.StartDate)
+		query = query.Where("tourism.tour_events.date >= ?", filter.StartDate)
 	}
 
 	// Filter by end date
 	if !filter.EndDate.IsZero() {
-		query = query.Where("tour_events.date <= ?", filter.EndDate)
+		query = query.Where("tourism.tour_events.date <= ?", filter.EndDate)
 	}
 
 	// Filter by budget
 	if filter.MinPrice > 0 {
-		query = query.Where("tour_events.price >= ?", filter.MinPrice)
+		query = query.Where("tourism.tour_events.price >= ?", filter.MinPrice)
 	}
 	if filter.MaxPrice > 0 {
-		query = query.Where("tour_events.price <= ?", filter.MaxPrice)
+		query = query.Where("tourism.tour_events.price <= ?", filter.MaxPrice)
 	}
-	fmt.Println(filter.MaxPrice)
 
 	// Execute the query
 	err := query.Preload("Tour").Find(&tourEvents).Error

@@ -68,6 +68,7 @@ func (p *Postgres) Migrate() error {
 		&entity.TourLocation{},
 		&entity.Category{},
 		&entity.UserFavorites{},
+		&entity.UserActivity{},
 	)
 	query, err := ioutil.ReadFile("pkg/postgres/create_categories.sql")
 	if err != nil {

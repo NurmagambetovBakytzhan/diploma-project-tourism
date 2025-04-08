@@ -16,14 +16,33 @@ import (
 type TourismUseCase struct {
 	repo     *repo.TourismRepo
 	producer sarama.SyncProducer
+	//telegram *client.Client
 }
 
+// // NewTourismUseCase -.
+//
+//	func NewTourismUseCase(r *repo.TourismRepo, p sarama.SyncProducer, t *client.Client) *TourismUseCase {
+//		return &TourismUseCase{
+//			repo:     r,
+//			producer: p,
+//			telegram: t,
+//		}
+//	}
+//
 // NewTourismUseCase -.
 func NewTourismUseCase(r *repo.TourismRepo, p sarama.SyncProducer) *TourismUseCase {
 	return &TourismUseCase{
 		repo:     r,
 		producer: p,
 	}
+}
+
+func (r *TourismUseCase) TrackUserAction(userID uuid.UUID, tourEventID uuid.UUID) {
+	r.repo.CreateUserAction(userID, tourEventID)
+}
+
+func (r *TourismUseCase) LikeTour(userID uuid.UUID, tourID uuid.UUID) (*entity.UserFavorites, error) {
+	return r.repo.LikeTour(userID, tourID)
 }
 
 func (r *TourismUseCase) GetMe(id uuid.UUID) (*entity.User, error) {
@@ -105,12 +124,22 @@ func (t *TourismUseCase) CheckTourOwner(tourID uuid.UUID, userID uuid.UUID) bool
 }
 
 func (t *TourismUseCase) CreateTourEvent(tourEvent *entity.TourEvent) (*entity.TourEvent, error) {
-	tourEvent, err := t.repo.CreateTourEvent(tourEvent)
+	//createNewBasicGroupChatRequest := client.CreateNewBasicGroupChatRequest{
+	//	UserIds: []int64{597878414},
+	//	Title:   tourEvent.Tour.Name,
+	//}
+	//chat, err := t.telegram.CreateNewBasicGroupChat(&createNewBasicGroupChatRequest)
+	//if err != nil {
+	//	log.Println("Usecase CreateGroupChat CreateTourEvent: ", err)
+	//}
+	//tourEvent.TelegramChatURL = strconv.FormatInt(chat.ChatId, 10)
+
+	result, err := t.repo.CreateTourEvent(tourEvent)
 	if err != nil {
 		return nil, fmt.Errorf("create tour event: %w", err)
 	}
 
-	return tourEvent, nil
+	return result, nil
 }
 
 func (t *TourismUseCase) CreateTour(tour *entity.Tour, imageFiles []*multipart.FileHeader, videoFiles []*multipart.FileHeader) (*entity.Tour, error) {
