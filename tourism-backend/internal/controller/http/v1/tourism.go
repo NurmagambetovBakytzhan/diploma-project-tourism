@@ -283,7 +283,7 @@ func (r *tourismRoutes) GetWeatherByTourEventID(c *gin.Context) {
 func (r *tourismRoutes) GetFilteredTourEvents(c *gin.Context) {
 	var filter entity.TourEventFilter
 
-	if err := c.BindQuery(&filter); err != nil {
+	if err := c.ShouldBindQuery(&filter); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -298,12 +298,16 @@ func (r *tourismRoutes) GetFilteredTourEvents(c *gin.Context) {
 
 	startDateStr := c.Query("start_date")
 	endDateStr := c.Query("end_date")
-	if startDateStr != "" && endDateStr != "" {
+	if startDateStr != "" {
 		startDate, err1 := time.Parse("2006-01-02", startDateStr)
-		endDate, err2 := time.Parse("2006-01-02", endDateStr)
-		if err1 == nil && err2 == nil {
+		if err1 == nil {
 			filter.StartDate = startDate
-			filter.EndDate = endDate
+		}
+	}
+	if endDateStr != "" {
+		endDate, err := time.Parse("2006-01-02", endDateStr)
+		if err == nil {
+			filter.EndDate = endDate.Add(23*time.Hour + 59*time.Minute + 59*time.Second)
 		}
 	}
 	if minPrice := c.Query("min_price"); minPrice != "" {
