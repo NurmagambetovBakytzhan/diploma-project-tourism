@@ -129,12 +129,11 @@ func (r *TourismRepo) GetTourEventByID(id uuid.UUID) (*entity.TourEvent, error) 
 }
 
 func (r *TourismRepo) GetFilteredTourEvents(filter *entity.TourEventFilter) ([]*entity.TourEvent, error) {
-	log.Println(filter)
 	var tourEvents []*entity.TourEvent
 
 	query := r.PG.Conn.
-		Joins("LEFT JOIN tourism.tours ON tourism.tours.id = tourism.tour_events.tour_id").
-		Joins("LEFT JOIN tourism.tour_categories ON tourism.tour_categories.tour_id = tourism.tours.id").
+		Joins("JOIN tourism.tours ON tourism.tours.id = tourism.tour_events.tour_id").
+		Joins("JOIN tourism.tour_categories ON tourism.tour_categories.tour_id = tourism.tours.id").
 		Where("tourism.tour_events.is_opened = ?", true)
 
 	// Filter by categories
@@ -142,14 +141,18 @@ func (r *TourismRepo) GetFilteredTourEvents(filter *entity.TourEventFilter) ([]*
 		query = query.Where("tourism.tour_categories.category_id IN ?", filter.CategoryIDs)
 	}
 
-	// Filter by start date
 	if !filter.StartDate.IsZero() {
 		query = query.Where("tourism.tour_events.date >= ?", filter.StartDate)
 	}
 
+	// Filter by start date
+	if !filter.EndDate.IsZero() {
+		query = query.Where("DATE(tourism.tour_events.date) <= ?", filter.EndDate.Format("2006-01-02"))
+	}
+
 	// Filter by end date
 	if !filter.EndDate.IsZero() {
-		query = query.Where("tourism.tour_events.date <= ?", filter.EndDate)
+		query = query.Where("DATE(tourism.tour_events.date) <= ?", filter.EndDate.Format("2006-01-02"))
 	}
 
 	// Filter by budget
