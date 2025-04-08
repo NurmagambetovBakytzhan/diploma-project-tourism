@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+type LikeTourDTO struct {
+	TourID string `json:"tour_id"`
+}
+
 type WeatherInfo struct {
 	TempCelsius    float64          `json:"temp_c"`
 	TempFahrenheit float64          `json:"temp_f"`

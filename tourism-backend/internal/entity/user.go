@@ -23,3 +23,10 @@ type UserFavorites struct {
 	TourID uuid.UUID `json:"tour_id" gorm:"primaryKey;autoIncrement:false;type:uuid;index"`
 	Tour   Tour      `gorm:"foreignKey:TourID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
+
+type UserActivity struct {
+	gorm.Model `swaggerignore:"true"`
+	ID         uuid.UUID `json:"ID" gorm:"primaryKey;type:uuid;default:uuid_generate_v4()"`
+	UserID     uuid.UUID `json:"user_id" gorm:"autoIncrement:false;type:uuid;index"`
+	TourID     uuid.UUID `json:"tour_id" gorm:"autoIncrement:false;type:uuid;index"`
+}

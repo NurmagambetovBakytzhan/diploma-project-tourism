@@ -30,6 +30,8 @@ type (
 		AddFilesToTourByTourID(panoramasEntity []*entity.Panorama) ([]*entity.Panorama, error)
 		ChangeTour(tour *entity.Tour) (*entity.Tour, error)
 		GetMe(id uuid.UUID) (*entity.User, error)
+		LikeTour(userID uuid.UUID, tourID uuid.UUID) (*entity.UserFavorites, error)
+		TrackUserAction(userID uuid.UUID, tourEventID uuid.UUID)
 	}
 
 	AdminInterface interface {

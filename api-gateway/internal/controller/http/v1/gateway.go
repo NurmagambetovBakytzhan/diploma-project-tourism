@@ -2,6 +2,7 @@ package v1
 
 import (
 	"api-gateway/pkg/logger"
+	rate_limit "api-gateway/pkg/rate-limit"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"io"
@@ -79,7 +80,6 @@ func ReverseProxy(target string) gin.HandlerFunc {
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Authorization, Content-Type")
 		c.Header("Access-Control-Allow-Credentials", "true")
-
 		// Set status code and write response
 		c.Status(resp.StatusCode)
 		c.Writer.Write(body)
@@ -88,13 +88,12 @@ func ReverseProxy(target string) gin.HandlerFunc {
 func NewRoutes(router *gin.Engine, l logger.Interface) {
 	// Enable CORS
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:4200"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
+		AllowAllOrigins:  true,
 		AllowCredentials: true,
-	}))
-	//}), rate_limit.RateLimiter)
+	}), rate_limit.RateLimiter)
 
 	// Load service URLs from environment variables
 	//tourismAPI := os.Getenv("TOURISM_API_PORT") // Example: http://localhost:8080

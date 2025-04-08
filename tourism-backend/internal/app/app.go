@@ -9,16 +9,15 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"tourism-backend/pkg/casbin"
-	"tourism-backend/pkg/kafka"
-	"tourism-backend/pkg/payment"
-
 	"tourism-backend/config"
 	v1 "tourism-backend/internal/controller/http/v1"
 	"tourism-backend/internal/usecase"
 	"tourism-backend/internal/usecase/repo"
+	"tourism-backend/pkg/casbin"
 	"tourism-backend/pkg/httpserver"
+	"tourism-backend/pkg/kafka"
 	"tourism-backend/pkg/logger"
+	"tourism-backend/pkg/payment"
 	"tourism-backend/pkg/postgres"
 )
 
@@ -69,13 +68,19 @@ func Run(cfg *config.Config) {
 	defer cancel()
 
 	go consumer.ConsumeMessages(ctx)
-	//
+
 	//telegramClient, err := telegram.PrepareTelegram()
 	//if err != nil {
 	//	log.Println("PREPARE TELEGRAM ERROR: ", err)
 	//	os.Exit(1)
 	//}
-	//fmt.Println(telegramClient)
+
+	//// Use case
+	//tourismUseCase := usecase.NewTourismUseCase(
+	//	repo.NewTourismRepo(pg),
+	//	kafkaProducer,
+	//	telegramClient,
+	//)
 	// Use case
 	tourismUseCase := usecase.NewTourismUseCase(
 		repo.NewTourismRepo(pg),
