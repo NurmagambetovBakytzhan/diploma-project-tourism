@@ -31,6 +31,7 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 		{
 			user.GET("/me", r.GetMe)
 			user.POST("/like", r.LikeTour)
+			user.POST("/avatar", r.AddAvatar)
 		}
 		h.GET("/v1/tours/uploads/:type/:filename", r.GetStaticFiles)
 		h.GET("/", r.GetTours)
@@ -61,6 +62,44 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 			protected.PATCH("/", r.ChangeTour)
 		}
 	}
+}
+
+// AddAvatar uploads avatar image for a specific tour.
+//
+// @Summary Upload avatar for a user
+// @Description Allows authenticated users to upload avatar images.
+// @Tags Users
+// @Accept multipart/form-data
+// @Produce json
+// @Param avatar formData file true "Avatar Image"
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{} "Avatar uploaded successfully"
+// @Failure 400 {object} map[string]string "Invalid request format or missing required fields"
+// @Failure 403 {object} map[string]string "Unauthorized: You are not the owner of this tour"
+// @Failure 500 {object} map[string]string "Failed to save file or database error"
+// @Router /v1/tours/users/avatar/ [post]
+// @Security Bearer
+func (r *tourismRoutes) AddAvatar(c *gin.Context) {
+	userID := utils.GetUserIDFromContext(c)
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 200<<20) // 200MB
+
+	if err := c.Request.ParseMultipartForm(200 << 20); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File size too large"})
+		return
+	}
+	avatar, exists := c.FormFile("avatar")
+	if exists != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error uploading file"})
+		return
+	}
+	filename := userID.String() + filepath.Ext(avatar.Filename)
+	filespath := "./uploads/avatars/" + filename
+	if err := c.SaveUploadedFile(avatar, filespath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Avatar uploaded successfully", "result": filespath})
+
 }
 
 // LikeTour godoc

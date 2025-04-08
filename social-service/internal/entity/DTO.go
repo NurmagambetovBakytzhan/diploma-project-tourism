@@ -1,6 +1,8 @@
 package entity
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type CreateUserDTO struct {
 	Username string `json:"username" binding:"required"`
@@ -40,4 +42,10 @@ type Notification struct {
 	Topic      string                 `json:"topic" binding:"required"`
 	Data       map[string]interface{} `json:"data" binding:"required"`
 	Recipients []uuid.UUID            `json:"recipients" binding:"required"`
+}
+
+type GetChatsDTO struct {
+	ID          uuid.UUID `json:"ID"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
 }

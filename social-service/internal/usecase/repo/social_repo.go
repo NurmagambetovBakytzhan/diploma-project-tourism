@@ -19,6 +19,27 @@ func NewSocialRepo(pg *postgres.Postgres) *SocialRepo {
 	return &SocialRepo{pg}
 }
 
+func (u *SocialRepo) GetAllChats() ([]*entity.GetChatsDTO, error) {
+	var chats []entity.Chat
+	var chatDTOs []*entity.GetChatsDTO
+
+	err := u.PG.Conn.Select("id, name, description").Find(&chats).Error
+	if err != nil {
+		log.Println("GetAllChats: ", err)
+		return nil, fmt.Errorf("Error getting all chats from DB: %v", err)
+	}
+
+	for _, chat := range chats {
+		chatDTO := &entity.GetChatsDTO{
+			ID:          chat.ID,
+			Name:        chat.Name,
+			Description: chat.Description,
+		}
+		chatDTOs = append(chatDTOs, chatDTO)
+	}
+
+	return chatDTOs, nil
+}
 func (u *SocialRepo) GetChatParticipants(chatID uuid.UUID) ([]uuid.UUID, error) {
 	var results []uuid.UUID
 	err := u.PG.Conn.Table("social_service.chat_participants").

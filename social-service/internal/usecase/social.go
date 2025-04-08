@@ -21,6 +21,10 @@ func NewSocialUseCase(r *repo.SocialRepo, p sarama.SyncProducer) *SocialUseCase 
 		producer: p,
 	}
 }
+
+func (u *SocialUseCase) GetAllChats() ([]*entity.GetChatsDTO, error) {
+	return u.repo.GetAllChats()
+}
 func (u *SocialUseCase) GetChatMessages(ChatID uuid.UUID) ([]*entity.Message, error) {
 	return u.repo.GetChatMessages(ChatID)
 }
