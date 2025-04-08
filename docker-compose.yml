@@ -1,5 +1,15 @@
 services:
-
+  recommendation-service:
+    container_name: recommendation-service
+    build:
+      context: ./recommendation-service
+    ports:
+      - "8050:8050"
+    depends_on:
+      tourism-db:
+        condition: service_healthy
+    networks:
+      - app_network
   notification-service:
     container_name: notification-service
     build:

@@ -102,6 +102,7 @@ func NewRoutes(router *gin.Engine, l logger.Interface) {
 	authAPI := "http://auth-service:8090"
 	socialAPI := "http://social-service:8060"
 	notificationsAPI := "http://notification-service:8070"
+	recommendationsAPI := "http://recommendation-service:8050"
 
 	// Auth Service Routes
 	router.Any("/v1/users/*any", ReverseProxy(authAPI))
@@ -109,4 +110,5 @@ func NewRoutes(router *gin.Engine, l logger.Interface) {
 	router.Any("/v1/tours/*any", ReverseProxy(tourismAPI)) // Forward to Tourism Service
 	router.Any("/v1/social/*any", ReverseProxy(socialAPI))
 	router.Any("/v1/notifications/*any", ReverseProxy(notificationsAPI))
+	router.Any("/v1/recommendations/*any", ReverseProxy(recommendationsAPI))
 }
