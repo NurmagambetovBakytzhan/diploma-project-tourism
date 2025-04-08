@@ -37,6 +37,14 @@ func NewTourismUseCase(r *repo.TourismRepo, p sarama.SyncProducer) *TourismUseCa
 	}
 }
 
+func (r *TourismUseCase) SaveMyAvatar(userID uuid.UUID, avatar string) error {
+	return r.repo.SaveMyAvatar(userID, avatar)
+}
+
+func (r *TourismUseCase) GetMyAvatar(userID uuid.UUID) (string, error) {
+	return r.repo.GetMyAvatar(userID)
+}
+
 func (r *TourismUseCase) TrackUserAction(userID uuid.UUID, tourEventID uuid.UUID) {
 	r.repo.CreateUserAction(userID, tourEventID)
 }

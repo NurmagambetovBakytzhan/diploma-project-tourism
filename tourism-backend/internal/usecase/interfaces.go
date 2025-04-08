@@ -32,6 +32,8 @@ type (
 		GetMe(id uuid.UUID) (*entity.User, error)
 		LikeTour(userID uuid.UUID, tourID uuid.UUID) (*entity.UserFavorites, error)
 		TrackUserAction(userID uuid.UUID, tourEventID uuid.UUID)
+		GetMyAvatar(userID uuid.UUID) (string, error)
+		SaveMyAvatar(userID uuid.UUID, avatar string) error
 	}
 
 	AdminInterface interface {
