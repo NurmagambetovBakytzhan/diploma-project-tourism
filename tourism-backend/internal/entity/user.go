@@ -15,6 +15,7 @@ type User struct {
 	CreatedTours        []Tour          `gorm:"foreignKey:OwnerID;references:ID"`
 	PurchasedTourEvents []Purchase      `gorm:"foreignKey:UserID;references:ID"`
 	FavoriteTours       []UserFavorites `gorm:"foreignKey:UserID;references:ID"`
+	AvatarURL           string
 }
 
 type UserFavorites struct {

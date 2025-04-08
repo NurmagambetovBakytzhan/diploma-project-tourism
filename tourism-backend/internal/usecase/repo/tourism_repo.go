@@ -27,6 +27,25 @@ func NewTourismRepo(pg *postgres.Postgres) *TourismRepo {
 	return &TourismRepo{pg}
 }
 
+func (r *TourismRepo) SaveMyAvatar(userID uuid.UUID, avatar string) error {
+	err := r.PG.Conn.Model(&entity.User{}).Where("id = ?", userID).Update("avatar_url", avatar).Error
+	if err != nil {
+		log.Println(err)
+		return fmt.Errorf("save user avatar failed")
+	}
+	return nil
+}
+
+func (r *TourismRepo) GetMyAvatar(userID uuid.UUID) (string, error) {
+	var result string
+	err := r.PG.Conn.Model(&entity.User{}).Select("avatar_url").Where("id = ?", userID).First(&result).Error
+	if err != nil {
+		log.Println("GetMyAvatar err: ", err)
+		return "", fmt.Errorf("error getting avatar: %w", err)
+	}
+	return result, nil
+}
+
 func (r *TourismRepo) CreateUserAction(userID, tourEventID uuid.UUID) {
 	userAction := entity.UserActivity{
 		UserID: userID,
@@ -371,11 +390,12 @@ func (r *TourismRepo) CreateTour(tour *entity.Tour, imageFiles []*multipart.File
 		for _, file := range imageFiles {
 			filename := uuid.New().String() + filepath.Ext(file.Filename)
 			filespath := "./uploads/images/" + filename
+			filespathToDB := "./v1/tours/uploads/images/" + filename
 			// Save the image file
 			if err := r.saveFile(file, filespath); err != nil {
 				return err
 			}
-			image := &entity.Image{ImageURL: filespath, TourID: tour.ID}
+			image := &entity.Image{ImageURL: filespathToDB, TourID: tour.ID}
 			if err := tx.Create(&image).Error; err != nil {
 				return err
 			}
@@ -385,12 +405,13 @@ func (r *TourismRepo) CreateTour(tour *entity.Tour, imageFiles []*multipart.File
 		for _, file := range videoFiles {
 			filename := uuid.New().String() + filepath.Ext(file.Filename)
 			filespath := "./uploads/videos/" + filename
+			filespathToDB := "./v1/tours/uploads/videos/" + filename
 			// Save the video file
 			if err := r.saveFile(file, filespath); err != nil {
 				return err
 			}
 			// Append the video record to the list
-			video := &entity.Video{VideoURL: filespath, TourID: tour.ID}
+			video := &entity.Video{VideoURL: filespathToDB, TourID: tour.ID}
 			if err := tx.Create(&video).Error; err != nil {
 				return err
 			}

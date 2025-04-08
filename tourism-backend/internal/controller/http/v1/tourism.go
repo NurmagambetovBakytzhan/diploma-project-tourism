@@ -32,6 +32,7 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 			user.GET("/me", r.GetMe)
 			user.POST("/like", r.LikeTour)
 			user.POST("/avatar", r.AddAvatar)
+			user.GET("/avatar", r.GetMyAvatar)
 		}
 		h.GET("/v1/tours/uploads/:type/:filename", r.GetStaticFiles)
 		h.GET("/", r.GetTours)
@@ -64,6 +65,17 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 	}
 }
 
+func (r *tourismRoutes) GetMyAvatar(c *gin.Context) {
+	userID := utils.GetUserIDFromContext(c)
+	result, err := r.t.GetMyAvatar(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "error getting user avatar"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": result})
+	return
+}
+
 // AddAvatar uploads avatar image for a specific tour.
 //
 // @Summary Upload avatar for a user
@@ -94,11 +106,18 @@ func (r *tourismRoutes) AddAvatar(c *gin.Context) {
 	}
 	filename := userID.String() + filepath.Ext(avatar.Filename)
 	filespath := "./uploads/avatars/" + filename
+	filespathToSave := "./v1/tours/uploads/avatars/" + filename
+
 	if err := c.SaveUploadedFile(avatar, filespath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Avatar uploaded successfully", "result": filespath})
+	err := r.t.SaveMyAvatar(userID, filespathToSave)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Avatar uploaded successfully", "result": filespathToSave})
 
 }
 
