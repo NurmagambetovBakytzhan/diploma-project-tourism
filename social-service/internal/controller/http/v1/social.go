@@ -30,6 +30,7 @@ func newSocialRoutes(handler fiber.Router, l logger.Interface, csbn *casbin.Enfo
 			chats.Post("/enter", r.EnterToChat)
 			chats.Get("/", r.GetMyChats)
 			chats.Get("/:id/messages", r.GetChatMessages)
+			chats.Get("/all", r.GetAllChats)
 		}
 	}
 	wshandler := handler.Group("/ws")
@@ -38,6 +39,28 @@ func newSocialRoutes(handler fiber.Router, l logger.Interface, csbn *casbin.Enfo
 		wshandler.Get("/", websocket.New(r.WebSocketHandler))
 	}
 
+}
+
+// GetAllChats retrieves all chats.
+// @Summary Get all chats
+// @Description Retrieves all chats.
+// @Tags chats
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param Authorization header string true "Bearer Token"
+// @Success 200 {object} map[string]interface{} "List of messages"
+// @Failure 400 {object} map[string]interface{} "Invalid chat ID or user not in chat"
+// @Failure 500 {object} map[string]interface{} "Internal server error"
+// @Router /v1/social/chats/all [get]
+// @Security Bearer
+func (r *socialRoutes) GetAllChats(c *fiber.Ctx) error {
+	result, err := r.s.GetAllChats()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error fetching chats"})
+	}
+
+	return c.JSON(fiber.Map{"chats": result})
 }
 
 // GetChatMessages retrieves messages from a chat.
@@ -52,7 +75,7 @@ func newSocialRoutes(handler fiber.Router, l logger.Interface, csbn *casbin.Enfo
 // @Success 200 {object} map[string]interface{} "List of messages"
 // @Failure 400 {object} map[string]interface{} "Invalid chat ID or user not in chat"
 // @Failure 500 {object} map[string]interface{} "Internal server error"
-// @Router /social/chats/{id}/messages [get]
+// @Router /v1/social/chats/{id}/messages [get]
 // @Security Bearer
 func (r *socialRoutes) GetChatMessages(c *fiber.Ctx) error {
 	userID := utils.GetUserIDFromContext(c)
@@ -89,7 +112,7 @@ func (r *socialRoutes) GetChatMessages(c *fiber.Ctx) error {
 // @Param Authorization header string true "Bearer Token"
 // @Success 200 {object} map[string]interface{} "List of user's chats"
 // @Failure 500 {object} map[string]interface{} "Internal server error"
-// @Router /social/chats [get]
+// @Router /v1/social/chats [get]
 // @Security Bearer
 func (r *socialRoutes) GetMyChats(c *fiber.Ctx) error {
 	userID := utils.GetUserIDFromContext(c)
@@ -113,7 +136,7 @@ func (r *socialRoutes) GetMyChats(c *fiber.Ctx) error {
 // @Param request body entity.ChatIdStringDTO true "Chat ID DTO"
 // @Success 200 {object} map[string]interface{} "Success message"
 // @Failure 400 {object} map[string]interface{} "Invalid chat ID or request body"
-// @Router /social/chats/enter [post]
+// @Router /v1/social/chats/enter [post]
 // @Security Bearer
 func (r *socialRoutes) EnterToChat(c *fiber.Ctx) error {
 	var chatIdStringDTO entity.ChatIdStringDTO
@@ -146,7 +169,7 @@ func (r *socialRoutes) EnterToChat(c *fiber.Ctx) error {
 // @Success 200 {object} entity.Chat "Created chat details"
 // @Failure 400 {object} map[string]interface{} "Invalid request body"
 // @Failure 500 {object} map[string]interface{} "Internal server error"
-// @Router /social/chats [post]
+// @Router /v1/social/chats [post]
 // @Security Bearer
 func (r *socialRoutes) CreateChat(c *fiber.Ctx) error {
 	var createDTO entity.CreateChatDTO

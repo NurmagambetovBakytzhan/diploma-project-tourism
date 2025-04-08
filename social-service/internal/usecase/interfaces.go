@@ -16,6 +16,7 @@ type (
 		CheckChatParticipant(chatID uuid.UUID, userID uuid.UUID) bool
 		PostMessage(message *entity.Message)
 		GetChatMessages(chatID uuid.UUID) ([]*entity.Message, error)
+		GetAllChats() ([]*entity.GetChatsDTO, error)
 	}
 	KafkaMessageProcessor interface {
 		ProcessMessage(key, value []byte) error
