@@ -65,6 +65,18 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 	}
 }
 
+// GetMyAvatar returns the avatar image info of the authenticated user.
+//
+// @Summary Get my avatar
+// @Description Returns avatar metadata or path for the authenticated user.
+// @Tags Users
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{} "Avatar info retrieved successfully"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /v1/tours/users/avatar [get]
+// @Security Bearer
 func (r *tourismRoutes) GetMyAvatar(c *gin.Context) {
 	userID := utils.GetUserIDFromContext(c)
 	result, err := r.t.GetMyAvatar(userID)
