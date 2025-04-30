@@ -27,6 +27,24 @@ func NewTourismRepo(pg *postgres.Postgres) *TourismRepo {
 	return &TourismRepo{pg}
 }
 
+func (r *TourismRepo) CheckPurchase(userID, purchaseID uuid.UUID) (*entity.Purchase, error) {
+	var purchase entity.Purchase
+
+	return &purchase, nil
+}
+
+func (r *TourismRepo) GetPurchaseQR(userID, purchaseID uuid.UUID) (*entity.Purchase, error) {
+	var purchase entity.Purchase
+	err := r.PG.Conn.Model(&purchase).
+		Where("id = ? AND user_id = ? AND status = ?", purchaseID, userID, "Paid").
+		First(&purchase).Error
+	if err != nil {
+		log.Println("GetPurchaseQR err:", err)
+		return nil, fmt.Errorf("tour event have not been paid or not exists")
+	}
+	return &purchase, nil
+}
+
 func (r *TourismRepo) SaveMyAvatar(userID uuid.UUID, avatar string) error {
 	err := r.PG.Conn.Model(&entity.User{}).Where("id = ?", userID).Update("avatar_url", avatar).Error
 	if err != nil {

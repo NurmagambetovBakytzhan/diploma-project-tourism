@@ -73,3 +73,8 @@ type Notification struct {
 	Data       map[string]interface{} `json:"data" binding:"required"`
 	Recipients []uuid.UUID            `json:"recipients" binding:"required"`
 }
+
+type PurchaseQRDTO struct {
+	QRCode string `json:"qr_code"`
+	URL    string `json:"url"`
+}

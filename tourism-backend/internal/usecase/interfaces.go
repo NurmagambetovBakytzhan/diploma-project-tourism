@@ -34,6 +34,8 @@ type (
 		TrackUserAction(userID uuid.UUID, tourEventID uuid.UUID)
 		GetMyAvatar(userID uuid.UUID) (string, error)
 		SaveMyAvatar(userID uuid.UUID, avatar string) error
+		GetPurchaseQR(userID, purchaseID uuid.UUID) (*entity.PurchaseQRDTO, error)
+		CheckPurchase(userID, purchaseID uuid.UUID) (*entity.Purchase, error)
 	}
 
 	AdminInterface interface {

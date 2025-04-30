@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from .config import settings
 from .database import fetch_tour_data, fetch_user_activities, get_db
 from .recommender import prepare_recommendation_system, recommend_for_user
+from .search import *
 
 # models.Base.metadata.create_all(bind=engine)
 
@@ -48,6 +49,19 @@ def get_user_recommendations(user_id: UUID, db: Session = Depends(get_db)):
         recommendations = recommend_for_user(user_visited_ids, tour_data, cosine_sim_matrix)
 
         return {"user_id": user_id, "recommendations": recommendations}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/v1/recommendations/search/{query}")
+def get_user_recommendations(query: str, db: Session = Depends(get_db)):
+    try:
+        tour_data = fetch_tour_data(db)
+        tour_data, tf_idf_matrix, vectorizer  = prepare_semantic_search(tour_data)
+
+        result = semantic_search(query, tour_data, tf_idf_matrix, vectorizer)
+
+        return {"Results": result}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")

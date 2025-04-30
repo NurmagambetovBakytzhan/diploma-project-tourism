@@ -37,6 +37,20 @@ func NewTourismUseCase(r *repo.TourismRepo, p sarama.SyncProducer) *TourismUseCa
 	}
 }
 
+func (r *TourismUseCase) CheckPurchase(userID, purchaseID uuid.UUID) (*entity.Purchase, error) {
+	return r.repo.CheckPurchase(userID, purchaseID)
+}
+
+func (r *TourismUseCase) GetPurchaseQR(userID, purchaseID uuid.UUID) (*entity.PurchaseQRDTO, error) {
+	_, err := r.repo.GetPurchaseQR(userID, purchaseID)
+	if err != nil {
+		log.Println("GetPurchaseQR err:", err)
+		return nil, err
+	}
+	result := utils.GenerateQRCode(purchaseID)
+	return result, nil
+}
+
 func (r *TourismUseCase) SaveMyAvatar(userID uuid.UUID, avatar string) error {
 	return r.repo.SaveMyAvatar(userID, avatar)
 }

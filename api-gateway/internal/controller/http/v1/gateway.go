@@ -88,10 +88,10 @@ func ReverseProxy(target string) gin.HandlerFunc {
 func NewRoutes(router *gin.Engine, l logger.Interface) {
 	// Enable CORS
 	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:4200"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
-		AllowAllOrigins:  true,
 		AllowCredentials: true,
 	}), rate_limit.RateLimiter)
 

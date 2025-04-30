@@ -33,6 +33,7 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 			user.POST("/like", r.LikeTour)
 			user.POST("/avatar", r.AddAvatar)
 			user.GET("/avatar", r.GetMyAvatar)
+			user.GET("/get-purchase-qr/:id", r.GetPurchaseQR)
 		}
 		h.GET("/v1/tours/uploads/:type/:filename", r.GetStaticFiles)
 		h.GET("/", r.GetTours)
@@ -61,8 +62,44 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 			protected.GET("/tour-location/:id", r.GetTourLocationByID)
 			protected.POST("/:id/", r.AddFilesToTourByTourID)
 			protected.PATCH("/", r.ChangeTour)
+			protected.POST("/:id/check", r.CheckPurchase)
 		}
 	}
+}
+
+func (r *tourismRoutes) CheckPurchase(c *gin.Context) {
+	userID := utils.GetUserIDFromContext(c)
+	purchaseIDStr := c.Param("id")
+	purchaseID, err := uuid.Parse(purchaseIDStr)
+	if err != nil {
+		log.Println("CheckPurchase err:", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error parsing purchase ID"})
+		return
+	}
+
+	result, err := r.t.CheckPurchase(userID, purchaseID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+func (r *tourismRoutes) GetPurchaseQR(c *gin.Context) {
+	userID := utils.GetUserIDFromContext(c)
+	purchaseIDStr := c.Param("id")
+	purchaseID, err := uuid.Parse(purchaseIDStr)
+	if err != nil {
+		log.Println("GetPurchaseQR err:", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error parsing purchase ID"})
+		return
+	}
+	result, err := r.t.GetPurchaseQR(userID, purchaseID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error getting purchase QR"})
+		return
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 // GetMyAvatar returns the avatar image info of the authenticated user.

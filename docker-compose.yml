@@ -127,7 +127,7 @@ services:
       test: [ "CMD-SHELL", "kafka-topics --list --bootstrap-server kafka:9092" ]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
 networks:
   app_network:
