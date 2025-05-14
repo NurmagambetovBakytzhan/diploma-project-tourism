@@ -47,7 +47,7 @@ type (
 	}
 
 	Stripe struct {
-		SecretKey string `env:"STRIPE_SECRET_KEY" yaml:"stripe_secret_key" env-required:"true"`
+		SecretKey string `env:"STRIPE_SECRET_KEY" env-required:"true"`
 	}
 
 	// RMQ -.
