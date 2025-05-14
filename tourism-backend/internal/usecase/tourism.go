@@ -38,7 +38,16 @@ func NewTourismUseCase(r *repo.TourismRepo, p sarama.SyncProducer) *TourismUseCa
 }
 
 func (r *TourismUseCase) CheckPurchase(userID, purchaseID uuid.UUID) (*entity.Purchase, error) {
-	return r.repo.CheckPurchase(userID, purchaseID)
+	result, err := r.repo.CheckPurchase(userID, purchaseID)
+	if err != nil {
+		log.Println("CheckPurchase err:", err)
+		return nil, fmt.Errorf("check purchase error: %w", err)
+	}
+	if result == nil {
+		log.Println("CheckPurchase result is nil")
+		return nil, fmt.Errorf("you are not the owner of this tour event")
+	}
+	return result, nil
 }
 
 func (r *TourismUseCase) GetPurchaseQR(userID, purchaseID uuid.UUID) (*entity.PurchaseQRDTO, error) {

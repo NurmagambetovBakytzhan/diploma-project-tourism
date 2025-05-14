@@ -30,7 +30,17 @@ func NewTourismRepo(pg *postgres.Postgres) *TourismRepo {
 func (r *TourismRepo) CheckPurchase(userID, purchaseID uuid.UUID) (*entity.Purchase, error) {
 	var purchase entity.Purchase
 
-	return &purchase, nil
+	err := r.PG.Conn.Preload("TourEvent.Tour").
+		First(&purchase, "id = ?", purchaseID).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if purchase.TourEvent.Tour.OwnerID == userID {
+		return &purchase, nil
+	}
+
+	return nil, nil
 }
 
 func (r *TourismRepo) GetPurchaseQR(userID, purchaseID uuid.UUID) (*entity.Purchase, error) {

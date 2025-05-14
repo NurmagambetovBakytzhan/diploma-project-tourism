@@ -11,11 +11,12 @@ import (
 type (
 	// Config -.
 	Config struct {
-		App   `yaml:"app"`
-		HTTP  `yaml:"http"`
-		Log   `yaml:"logger"`
-		PG    `yaml:"postgres"`
-		Kafka `yaml:"kafka"`
+		App    `yaml:"app"`
+		HTTP   `yaml:"http"`
+		Log    `yaml:"logger"`
+		PG     `yaml:"postgres"`
+		Kafka  `yaml:"kafka"`
+		Stripe `yaml:"stripe"`
 	}
 
 	// App -.
@@ -43,6 +44,10 @@ type (
 
 	Kafka struct {
 		Address string `yaml:"kafka_address"`
+	}
+
+	Stripe struct {
+		SecretKey string `env:"STRIPE_SECRET_KEY" yaml:"stripe_secret_key" env-required:"true"`
 	}
 
 	// RMQ -.

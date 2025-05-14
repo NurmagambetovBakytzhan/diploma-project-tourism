@@ -1,9 +1,14 @@
 package v1
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/stripe/stripe-go/v82"
+	"github.com/stripe/stripe-go/v82/paymentintent"
+	"github.com/stripe/stripe-go/v82/webhook"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -35,21 +40,20 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 			user.GET("/avatar", r.GetMyAvatar)
 			user.GET("/get-purchase-qr/:id", r.GetPurchaseQR)
 		}
-		h.GET("/v1/tours/uploads/:type/:filename", r.GetStaticFiles)
-		h.GET("/", r.GetTours)
-		h.GET("/:id", r.GetTourByID)
-		h.GET("/categories", r.GetAllCategories)
-		h.GET("/tour-events", r.GetFilteredTourEvents)
+
 		usertracking := h.Group("/")
 		usertracking.Use(utils.JWTAuthMiddleware())
 		{
 			usertracking.GET("/tour-events/:id", r.GetTourEventByID)
 		}
-		h.GET("/tour-events/:id/weather", r.GetWeatherByTourEventID)
+
 		pay := h.Group("/payment")
 		pay.Use(utils.JWTAuthMiddleware())
 		{
 			pay.POST("/", r.PayTourEvent)
+			pay.POST("/create-payment-intent", r.CreatePaymentIntent)
+			pay.POST("/confirm-payment", r.ConfirmPayment)
+			//pay.POST("/stripe-webhook", r.HandleStripeWebHook)
 		}
 
 		protected := h.Group("/provider")
@@ -64,9 +68,120 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 			protected.PATCH("/", r.ChangeTour)
 			protected.POST("/:id/check", r.CheckPurchase)
 		}
+
+		h.GET("/v1/tours/uploads/:type/:filename", r.GetStaticFiles)
+		h.GET("/", r.GetTours)
+		h.GET("/:id", r.GetTourByID)
+		h.GET("/categories", r.GetAllCategories)
+		h.GET("/tour-events", r.GetFilteredTourEvents)
+		h.GET("/tour-events/:id/weather", r.GetWeatherByTourEventID)
 	}
 }
 
+func (r *tourismRoutes) HandleStripeWebhook(c *gin.Context) {
+	const endpointSecret = "whsec_your_webhook_secret"
+	payload, err := c.GetRawData()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	event, err := webhook.ConstructEvent(payload, c.GetHeader("Stripe-Signature"), endpointSecret)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	switch event.Type {
+	case "payment_intent.succeeded":
+		var paymentIntent stripe.PaymentIntent
+		err := json.Unmarshal(event.Data.Raw, &paymentIntent)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		// Handle successful payment
+		fmt.Printf("Payment succeeded for %d!\n", paymentIntent.Amount)
+
+	case "payment_intent.payment_failed":
+		var paymentIntent stripe.PaymentIntent
+		err := json.Unmarshal(event.Data.Raw, &paymentIntent)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		// Handle failed payment
+		fmt.Printf("Payment failed: %v\n", paymentIntent.LastPaymentError)
+
+	default:
+		fmt.Printf("Unhandled event type: %s\n", event.Type)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success"})
+}
+
+func (r *tourismRoutes) CreatePaymentIntent(c *gin.Context) {
+	var req entity.CreatePaymentIntentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	params := &stripe.PaymentIntentParams{
+		Amount:   stripe.Int64(req.Amount),
+		Currency: stripe.String(req.Currency),
+		AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
+			Enabled: stripe.Bool(true),
+		},
+	}
+
+	pi, err := paymentintent.New(params)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, entity.CreatePaymentIntentResponse{
+		ClientSecret: pi.ClientSecret,
+	})
+}
+
+func (r *tourismRoutes) ConfirmPayment(c *gin.Context) {
+	var req entity.ConfirmPaymentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	pi, err := paymentintent.Get(req.PaymentIntentID, nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":         pi.Status,
+		"amount":         pi.Amount,
+		"currency":       pi.Currency,
+		"payment_method": pi.PaymentMethod.ID,
+		"receipt_email":  pi.ReceiptEmail,
+	})
+}
+
+// CheckPurchase godoc
+// @Summary Check QR Info
+// @Description Checks whether the authenticated provider is the owner of the tour event associated with the given purchase ID
+// @Tags Provider
+// @Param id path string true "Purchase ID (UUID)"
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} entity.Purchase "Purchase information"
+// @Failure 400 {object} map[string]string "Invalid purchase ID"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 403 {object} map[string]string "You are not the owner of this tour event"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /v1/tours/provider/{id}/check [post]
+// @Security Bearer
 func (r *tourismRoutes) CheckPurchase(c *gin.Context) {
 	userID := utils.GetUserIDFromContext(c)
 	purchaseIDStr := c.Param("id")
@@ -79,12 +194,25 @@ func (r *tourismRoutes) CheckPurchase(c *gin.Context) {
 
 	result, err := r.t.CheckPurchase(userID, purchaseID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, result)
 }
 
+// GetPurchaseQR godoc
+// @Summary Get QR code for a purchase
+// @Description Returns a QR code for the specified purchase ID if the user has access
+// @Tags Users
+// @Param id path string true "Purchase ID (UUID)"
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{} "QR code data"
+// @Failure 400 {object} map[string]string "Invalid purchase ID"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Error getting purchase QR"
+// @Router /v1/tours/users/get-purchase-qr/{id}/ [get]
+// @Security Bearer
 func (r *tourismRoutes) GetPurchaseQR(c *gin.Context) {
 	userID := utils.GetUserIDFromContext(c)
 	purchaseIDStr := c.Param("id")
@@ -231,7 +359,7 @@ func (r *tourismRoutes) GetMe(c *gin.Context) {
 // @Failure 400 {object} map[string]string "Bad request - invalid body"
 // @Failure 403 {object} map[string]string "Forbidden - not the owner"
 // @Failure 500 {object} map[string]string "Internal server error"
-// @Router /tours/provider [patch]
+// @Router /v1/tours/provider [patch]
 // @Security Bearer
 func (r *tourismRoutes) ChangeTour(c *gin.Context) {
 	var changeTour entity.Tour
@@ -271,7 +399,7 @@ func (r *tourismRoutes) ChangeTour(c *gin.Context) {
 // @Failure 400 {object} map[string]string "Invalid request format or missing required fields"
 // @Failure 403 {object} map[string]string "Unauthorized: You are not the owner of this tour"
 // @Failure 500 {object} map[string]string "Failed to save file or database error"
-// @Router /tours/provider/{id}/ [post]
+// @Router /v1/tours/provider/{id}/ [post]
 // @Security Bearer
 func (r *tourismRoutes) AddFilesToTourByTourID(c *gin.Context) {
 	tourID, err := uuid.Parse(c.Param("id"))

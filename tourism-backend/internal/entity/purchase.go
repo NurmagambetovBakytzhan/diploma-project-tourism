@@ -14,3 +14,16 @@ type Purchase struct {
 	TourEventID uuid.UUID `json:"TourEventID"`
 	Status      string    `json:"Status"`
 }
+
+type CreatePaymentIntentRequest struct {
+	Amount   int64  `json:"amount"`
+	Currency string `json:"currency"`
+}
+
+type CreatePaymentIntentResponse struct {
+	ClientSecret string `json:"clientSecret"`
+}
+
+type ConfirmPaymentRequest struct {
+	PaymentIntentID string `json:"paymentIntentId"`
+}

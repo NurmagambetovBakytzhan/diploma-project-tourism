@@ -104,7 +104,7 @@ func Run(cfg *config.Config) {
 	paymentProcessor := payment.NewPaymentProcessor(10, tourismUseCase)
 
 	// New Router
-	v1.NewRouter(handler, l, service, csbn, paymentProcessor)
+	v1.NewRouter(handler, l, service, csbn, paymentProcessor, cfg)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal

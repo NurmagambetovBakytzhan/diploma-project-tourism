@@ -2,10 +2,13 @@
 package v1
 
 import (
+	"fmt"
 	"github.com/casbin/casbin/v2"
+	"github.com/stripe/stripe-go/v82"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"net/http"
+	"tourism-backend/config"
 	"tourism-backend/pkg/payment"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +26,7 @@ import (
 // @version     1.0
 // @host        localhost:8080
 // @BasePath    /v1/tours
-func NewRouter(handler *gin.Engine, l logger.Interface, service *usecase.Service, csbn *casbin.Enforcer, paymentProcessor *payment.PaymentProcessor) {
+func NewRouter(handler *gin.Engine, l logger.Interface, service *usecase.Service, csbn *casbin.Enforcer, paymentProcessor *payment.PaymentProcessor, cfg *config.Config) {
 	// Options
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
@@ -38,7 +41,11 @@ func NewRouter(handler *gin.Engine, l logger.Interface, service *usecase.Service
 	})
 	// Prometheus metrics
 	handler.GET("/metrics", gin.WrapH(promhttp.Handler()))
-
+	stripe.Key = cfg.Stripe.SecretKey
+	if stripe.Key == "" {
+		fmt.Println("Please set STRIPE_SECRET_KEY environment variable")
+		return
+	}
 	// Routers
 	h := handler.Group("/v1")
 	{
