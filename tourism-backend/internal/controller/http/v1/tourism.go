@@ -120,6 +120,18 @@ func (r *tourismRoutes) HandleStripeWebhook(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success"})
 }
 
+// CreatePaymentIntent godoc
+// @Summary Create Payment Intent
+// @Description Creation of Payment Intent for Stripe
+// @Tags Payment
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} entity.CreatePaymentIntentRequest "Purchase information"
+// @Failure 400 {object} map[string]string "Invalid json body"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /v1/tours/payment/create-payment-intent [post]
+// @Security Bearer
 func (r *tourismRoutes) CreatePaymentIntent(c *gin.Context) {
 	var req entity.CreatePaymentIntentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
