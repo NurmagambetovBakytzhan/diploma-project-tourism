@@ -46,6 +46,7 @@ func NewRouter(handler *gin.Engine, l logger.Interface, service *usecase.Service
 		fmt.Println("Please set STRIPE_SECRET_KEY environment variable")
 		return
 	}
+	fmt.Println("Stripe secret key: ", stripe.Key)
 	// Routers
 	h := handler.Group("/v1")
 	{
