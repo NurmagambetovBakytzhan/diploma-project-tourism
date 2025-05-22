@@ -35,19 +35,28 @@ def fetch_tour_data(db:Session):
     df = pd.DataFrame(result.fetchall(), columns=result.keys())
     return df
 
+def fetch_not_embedded_tours(db: Session):
+    query = """
+            SELECT tourism.tours.id,
+                   tourism.tours.description,
+                   tourism.tours.name,
+                   tourism.categories.name AS category
+            FROM tourism.tours
+                     LEFT JOIN
+                 tourism.tour_categories ON tourism.tours.id = tourism.tour_categories.tour_id
+                     LEFT JOIN
+                 tourism.categories ON tourism.tour_categories.category_id = tourism.categories.id
+                     LEFT JOIN
+                 tourism.tour_embeddings ON tourism.tours.id = tourism.tour_embeddings.tour_id
+            WHERE tourism.tour_embeddings.tour_id IS NULL         
+    """
+    result = db.execute(text(query))
+    df = pd.DataFrame(result.fetchall(), columns=result.keys())
+    return df
+
 def fetch_user_activities(db: Session):
     query = "SELECT user_id, tour_id FROM tourism.user_activities"
     result = db.execute(text(query))
     df = pd.DataFrame(result.fetchall(), columns=result.keys())
     return df
-# while True:
-#     try:
-#         conn = psycopg2.connect(host='localhost', database='fastapi', user='postgres', password='123',
-#                                 cursor_factory=RealDictCursor)
-#         cursor = conn.cursor()
-#         print("Database conn successfull")
-#         break
-#     except Exception as error:
-#         print("Connection failed")
-#         print(error)
-#         time.sleep(2)
+

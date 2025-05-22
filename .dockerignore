@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+.idea
+.vscode
+.git
+./recommendation-service/wheels
+.venv
+
+wheels/
+.whl

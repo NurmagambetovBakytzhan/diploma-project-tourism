@@ -400,7 +400,7 @@ func (r *TourismRepo) GetTourByID(tourID string) (*entity.Tour, error) {
 
 func (r *TourismRepo) GetTours() ([]entity.Tour, error) {
 	var tours []entity.Tour
-	err := r.PG.Conn.Preload("TourImages").Preload("TourVideos").Preload("TourPanoramas").Find(&tours).Error
+	err := r.PG.Conn.Preload("TourImages").Preload("TourVideos").Preload("TourPanoramas").Preload("TourEvents").Find(&tours).Error
 	if err != nil {
 		return nil, err
 	}

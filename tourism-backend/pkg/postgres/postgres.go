@@ -70,19 +70,31 @@ func (p *Postgres) Migrate() error {
 		&entity.UserFavorites{},
 		&entity.UserActivity{},
 	)
+	if err != nil {
+		log.Println("Migrating entities to Postgres - err: %w", err)
+		return err
+	}
 	query, err := ioutil.ReadFile("pkg/postgres/create_categories.sql")
 	if err != nil {
+		log.Println("Error reding Create_categories.sql")
 		panic(err)
 	}
 	if err := p.Conn.Exec(string(query)).Error; err != nil {
+		log.Println("Error Executing create_categories.sql")
 		panic(err)
 	}
 	if err != nil {
-		log.Fatal("Failed to create schema:", err)
+		log.Println("Failed to create schema:", err)
 	}
+
+	queryTourEmbeddings, err := ioutil.ReadFile("pkg/postgres/create_tour_embeddings.sql")
 	if err != nil {
-		fmt.Errorf("Migrating entities to Postgres - err: %w", err)
-		return err
+		log.Println("Error reading create_tour_embeddings.sql")
+		panic(err)
+	}
+	if err := p.Conn.Exec(string(queryTourEmbeddings)).Error; err != nil {
+		log.Println("Error executing tourembeddings")
+		panic(err)
 	}
 	return nil
 }
