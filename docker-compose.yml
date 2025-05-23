@@ -1,9 +1,6 @@
 services:
-
   recommendation-service:
     container_name: recommendation-service
-    build:
-      context: ./recommendation-service
     ports:
       - "8050:8050"
     depends_on:
@@ -13,11 +10,11 @@ services:
       - app_network
     volumes:
       - ./recommendation-service:/app
+    image: bakytzhannurmagambetov/recommendation-service:latest
+
 
   notification-service:
     container_name: notification-service
-    build:
-      context: ./notification-service
     ports:
       - "8070:8070"
     depends_on:
@@ -27,11 +24,11 @@ services:
         condition: service_healthy
     networks:
       - app_network
+    image: bakytzhannurmagambetov/notification-service:latest
+
 
   social-service:
     container_name: social-service
-    build:
-      context: ./social-service
     ports:
       - "8060:8060"
     depends_on:
@@ -41,11 +38,11 @@ services:
         condition: service_healthy
     networks:
       - app_network
+    image: bakytzhannurmagambetov/social-service:latest
+
 
   tourism-backend:
     container_name: tourism-backend
-    build:
-      context: ./tourism-backend
     ports:
       - "8080:8080"
     depends_on:
@@ -55,11 +52,11 @@ services:
         condition: service_healthy
     networks:
       - app_network
+    image: bakytzhannurmagambetov/tourism-backend:latest
+
 
   auth-service:
     container_name: auth-service
-    build:
-      context: ./authentication-service
     ports:
       - "8090:8090"
     depends_on:
@@ -69,15 +66,16 @@ services:
         condition: service_healthy
     networks:
       - app_network
+    image: bakytzhannurmagambetov/auth-service:latest
 
   api-gateway:
     container_name: api-gateway
-    build:
-      context: ./api-gateway
     ports:
       - "8000:8000"
     networks:
       - app_network
+    image: bakytzhannurmagambetov/api-gateway:latest
+
 
   tourism-db:
     container_name: tourism-db
