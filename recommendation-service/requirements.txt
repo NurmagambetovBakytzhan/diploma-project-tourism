@@ -1,3 +1,4 @@
+wheel==0.46.1
 annotated-types==0.7.0
 anyio==4.9.0
 certifi==2025.4.26
@@ -68,4 +69,3 @@ typing_extensions==4.13.1
 tzdata==2025.2
 urllib3==2.4.0
 uvicorn==0.34.0
-wheel==0.46.1
