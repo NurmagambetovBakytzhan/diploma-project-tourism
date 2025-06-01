@@ -38,7 +38,8 @@ services:
         condition: service_healthy
     networks:
       - app_network
-    image: bakytzhannurmagambetov/social-service:latest
+    build:
+      context: ./social-service
 
 
   tourism-backend:
@@ -52,8 +53,17 @@ services:
         condition: service_healthy
     networks:
       - app_network
-    image: bakytzhannurmagambetov/tourism-backend:latest
-
+    build:
+      context: ./tourism-backend
+    volumes:
+      - ./tourism-backend:/go/src/app
+      - tourism-backend-bin:/go/bin
+      - tourism-backend-pkg:/go/pkg
+      - tourism-backend-uploads:/app/uploads
+    working_dir: /go/src/app
+    environment:
+      - GOPATH=/go
+      - GOCACHE=/go/cache
 
   auth-service:
     container_name: auth-service
@@ -68,13 +78,21 @@ services:
       - app_network
     image: bakytzhannurmagambetov/auth-service:latest
 
+#  api-gateway:
+#    container_name: api-gateway
+#    ports:
+#      - "8000:8000"
+#    networks:
+#      - app_network
+#    image: bakytzhannurmagambetov/api-gateway:latest
   api-gateway:
     container_name: api-gateway
+    build:
+      context: ./api-gateway
     ports:
       - "8000:8000"
     networks:
       - app_network
-    image: bakytzhannurmagambetov/api-gateway:latest
 
 
   tourism-db:
@@ -139,3 +157,6 @@ volumes:
   kafka-volume:
   zookeeper-volume:
   pg-data:
+  tourism-backend-bin:
+  tourism-backend-pkg:
+  tourism-backend-uploads:

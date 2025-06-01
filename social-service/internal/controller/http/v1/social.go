@@ -4,14 +4,19 @@ import (
 	"github.com/casbin/casbin/v2"
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"log"
+	"os"
 	"social-service/internal/entity"
 	"social-service/internal/usecase"
 	"social-service/pkg/logger"
 	pkg "social-service/pkg/websocket"
 	"social-service/utils"
+	"strings"
 )
+
+var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
 type socialRoutes struct {
 	l logger.Interface
@@ -34,7 +39,7 @@ func newSocialRoutes(handler fiber.Router, l logger.Interface, csbn *casbin.Enfo
 		}
 	}
 	wshandler := handler.Group("/ws")
-	wshandler.Use(utils.JWTAuthMiddleware(), utils.WebSocketMiddleware())
+	wshandler.Use(utils.WebSocketMiddleware())
 	{
 		wshandler.Get("/", websocket.New(r.WebSocketHandler))
 	}
@@ -196,9 +201,23 @@ func (r *socialRoutes) CreateChat(c *fiber.Ctx) error {
 // @Router /v1/ws [get]
 // @Security Bearer
 func (r *socialRoutes) WebSocketHandler(c *websocket.Conn) {
+	chatID := c.Query("chatID")
+	access_token := c.Query("token")
+	tokenStr := strings.TrimPrefix(access_token, "Bearer ")
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+	if err != nil || !token.Valid {
+		return
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return
+	}
+
 	clientObj := pkg.ClientObject{
-		ChatID: c.Locals("ChatID").(string),
-		UserID: c.Locals("UserID").(string),
+		ChatID: chatID,
+		UserID: claims["user_id"].(string),
 		Conn:   c,
 	}
 	defer func() {

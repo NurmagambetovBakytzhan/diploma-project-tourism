@@ -37,6 +37,9 @@ func NewTourismUseCase(r *repo.TourismRepo, p sarama.SyncProducer) *TourismUseCa
 	}
 }
 
+func (r *TourismUseCase) GetTourEventsByTourID(tourID uuid.UUID) ([]*entity.TourEvent, error) {
+	return r.repo.GetTourEventsByTourID(tourID)
+}
 func (r *TourismUseCase) CheckPurchase(userID, purchaseID uuid.UUID) (*entity.Purchase, error) {
 	result, err := r.repo.CheckPurchase(userID, purchaseID)
 	if err != nil {

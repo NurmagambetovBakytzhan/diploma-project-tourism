@@ -72,10 +72,27 @@ func newTourismRoutes(handler *gin.RouterGroup, t usecase.TourismInterface, l lo
 		h.GET("/v1/tours/uploads/:type/:filename", r.GetStaticFiles)
 		h.GET("/", r.GetTours)
 		h.GET("/:id", r.GetTourByID)
+		h.GET("/:id/tour-events", r.GetTourEventsByTourID)
 		h.GET("/categories", r.GetAllCategories)
 		h.GET("/tour-events", r.GetFilteredTourEvents)
 		h.GET("/tour-events/:id/weather", r.GetWeatherByTourEventID)
 	}
+}
+
+func (r *tourismRoutes) GetTourEventsByTourID(c *gin.Context) {
+	tourIDString := c.Param("id")
+
+	tourID, err := uuid.Parse(tourIDString)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	result, err := r.t.GetTourEventsByTourID(tourID)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 func (r *tourismRoutes) HandleStripeWebhook(c *gin.Context) {
@@ -453,7 +470,7 @@ func (r *tourismRoutes) AddFilesToTourByTourID(c *gin.Context) {
 		}
 
 		panoramas = append(panoramas, &entity.Panorama{
-			PanoramaURL: filespath,
+			PanoramaURL: "./v1/tours/uploads/panoramas/" + filename,
 			TourID:      tourID,
 		})
 	}
@@ -841,9 +858,9 @@ func (r *tourismRoutes) GetTours(c *gin.Context) {
 // @Router /v1/tours/provider [post]
 // @Security Bearer
 func (r *tourismRoutes) CreateTour(c *gin.Context) {
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 200<<20) // 200MB
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 1024<<20) // 200MB
 
-	if err := c.Request.ParseMultipartForm(200 << 20); err != nil {
+	if err := c.Request.ParseMultipartForm(1024 << 20); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File size too large"})
 		return
 	}

@@ -27,6 +27,17 @@ func NewTourismRepo(pg *postgres.Postgres) *TourismRepo {
 	return &TourismRepo{pg}
 }
 
+func (r *TourismRepo) GetTourEventsByTourID(tourID uuid.UUID) ([]*entity.TourEvent, error) {
+	var res []*entity.TourEvent
+
+	err := r.PG.Conn.Model(&entity.TourEvent{}).Where("tour_id = ?", tourID).Find(&res).Error
+	if err != nil {
+		log.Println(err)
+		return nil, fmt.Errorf("get tour events by tour id")
+	}
+	return res, nil
+}
+
 func (r *TourismRepo) CheckPurchase(userID, purchaseID uuid.UUID) (*entity.Purchase, error) {
 	var purchase entity.Purchase
 
@@ -109,6 +120,9 @@ func (r *TourismRepo) GetMe(id uuid.UUID) (*entity.User, error) {
 		Preload("CreatedTours").
 		Preload("PurchasedTourEvents").
 		Preload("FavoriteTours").
+		Preload("PurchasedTourEvents.TourEvent").
+		Preload("PurchasedTourEvents.TourEvent.Tour").
+		Preload("PurchasedTourEvents.TourEvent.Tour.TourImages").
 		First(&user, id).
 		Error
 	if err != nil {
@@ -180,7 +194,7 @@ func (r *TourismRepo) GetFilteredTourEvents(filter *entity.TourEventFilter) ([]*
 
 	query := r.PG.Conn.
 		Joins("JOIN tourism.tours ON tourism.tours.id = tourism.tour_events.tour_id").
-		Joins("JOIN tourism.tour_categories ON tourism.tour_categories.tour_id = tourism.tours.id").
+		Joins("LEFT JOIN tourism.tour_categories ON tourism.tour_categories.tour_id = tourism.tours.id").
 		Where("tourism.tour_events.is_opened = ?", true)
 
 	// Filter by categories
@@ -211,7 +225,7 @@ func (r *TourismRepo) GetFilteredTourEvents(filter *entity.TourEventFilter) ([]*
 	}
 
 	// Execute the query
-	err := query.Preload("Tour").Find(&tourEvents).Error
+	err := query.Preload("Tour").Preload("Tour.TourImages").Find(&tourEvents).Error
 	return tourEvents, err
 }
 

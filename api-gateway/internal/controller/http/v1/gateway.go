@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type TourismRoutes struct {
@@ -51,6 +52,11 @@ func ReverseProxy(target string) gin.HandlerFunc {
 			}
 		}
 
+		if isImageRequest(c.Request.URL.Path) {
+			c.Header("Access-Control-Allow-Origin", "http://localhost:4200")
+			c.Header("Cache-Control", "public, max-age=31536000")
+		}
+
 		// Make the request to the target microservice
 		client := &http.Client{}
 		resp, err := client.Do(req)
@@ -76,7 +82,11 @@ func ReverseProxy(target string) gin.HandlerFunc {
 			}
 		}
 
-		c.Header("Access-Control-Allow-Origin", "http://localhost:4200")
+		origin := c.Request.Header.Get("Origin")
+		if origin == "http://localhost:3000" || origin == "http://localhost:4200" {
+			c.Header("Access-Control-Allow-Origin", origin)
+			c.Header("Access-Control-Allow-Credentials", "true")
+		}
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Authorization, Content-Type")
 		c.Header("Access-Control-Allow-Credentials", "true")
@@ -85,10 +95,20 @@ func ReverseProxy(target string) gin.HandlerFunc {
 		c.Writer.Write(body)
 	}
 }
+
+func isImageRequest(path string) bool {
+	return strings.HasSuffix(path, ".jpg") ||
+		strings.HasSuffix(path, ".jpeg") ||
+		strings.HasSuffix(path, ".png") ||
+		strings.HasSuffix(path, ".gif")
+}
 func NewRoutes(router *gin.Engine, l logger.Interface) {
 	// Enable CORS
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:4200"},
+		AllowOrigins: []string{"http://localhost:3000", "http://localhost:4200"},
+		AllowOriginFunc: func(origin string) bool {
+			return origin == "http://localhost:3000" || origin == "http://localhost:4200"
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
