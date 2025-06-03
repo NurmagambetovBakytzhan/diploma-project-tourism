@@ -20,7 +20,6 @@ type TourismRoutes struct {
 func ReverseProxy(target string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Method == http.MethodOptions {
-
 			c.Header("Access-Control-Allow-Origin", "http://localhost:4200")
 			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 			c.Header("Access-Control-Allow-Headers", "Origin, Authorization, Content-Type")

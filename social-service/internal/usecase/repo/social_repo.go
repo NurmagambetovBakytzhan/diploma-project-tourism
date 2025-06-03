@@ -57,6 +57,7 @@ func (u *SocialRepo) GetChatMessages(ChatID uuid.UUID) ([]*entity.Message, error
 	var chatMessages []*entity.Message
 
 	err := u.PG.Conn.
+		Preload("User").
 		Where("chat_id = ?", ChatID).
 		Order("created_at DESC").
 		Find(&chatMessages).

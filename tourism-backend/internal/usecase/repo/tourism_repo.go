@@ -118,7 +118,9 @@ func (r *TourismRepo) GetMe(id uuid.UUID) (*entity.User, error) {
 	var user entity.User
 	err := r.PG.Conn.
 		Preload("CreatedTours").
-		Preload("PurchasedTourEvents").
+		Preload("PurchasedTourEvents", func(db *gorm.DB) *gorm.DB {
+			return db.Order("tourism.purchases.created_at desc")
+		}).
 		Preload("FavoriteTours").
 		Preload("PurchasedTourEvents.TourEvent").
 		Preload("PurchasedTourEvents.TourEvent.Tour").
@@ -181,7 +183,7 @@ func (r *TourismRepo) GetWeatherInfoByTourEventID(tourEventID uuid.UUID) (*entit
 
 func (r *TourismRepo) GetTourEventByID(id uuid.UUID) (*entity.TourEvent, error) {
 	var tourEvent entity.TourEvent
-	err := r.PG.Conn.First(&tourEvent, id).Error
+	err := r.PG.Conn.Preload("Tour").First(&tourEvent, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +227,7 @@ func (r *TourismRepo) GetFilteredTourEvents(filter *entity.TourEventFilter) ([]*
 	}
 
 	// Execute the query
-	err := query.Preload("Tour").Preload("Tour.TourImages").Find(&tourEvents).Error
+	err := query.Preload("Tour").Preload("Tour.TourImages").Order("date desc").Find(&tourEvents).Error
 	return tourEvents, err
 }
 

@@ -18,8 +18,8 @@ var (
 	mu        sync.Mutex
 	clients   = make(map[string]*clientInfo)
 	rateLimit = rate.Limit(1)
-	burst     = 100
-	banTime   = 10 * time.Second // ban duration
+	burst     = 1000
+	banTime   = 1 * time.Second // ban duration
 )
 
 func getClientLimiter(ip string) *clientInfo {

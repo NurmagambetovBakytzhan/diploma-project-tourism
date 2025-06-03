@@ -21,6 +21,7 @@ type Tour struct {
 	TourCategories    []TourCategory  `json:"tour_categories" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
 	TourLocation      *TourLocation   `json:"tour_location" gorm:"foreignKey:TourID;references:ID"`
 	TourUserFavorites []UserFavorites `json:"tour_user_favorites" gorm:"foreignKey:TourID;references:ID;constraint:OnDelete:CASCADE;"`
+	AirpanoLink       string          `json:"airpano_link"`
 }
 
 type Category struct {
