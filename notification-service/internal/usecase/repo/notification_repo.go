@@ -29,6 +29,7 @@ func (n *NotificationRepo) GetMyNotifications(userID uuid.UUID) ([]*entity.Notif
 	var notifications []*entity.Notification
 	err := n.PG.Conn.Table("notification_service.notifications").
 		Where("recipient_id = ?", userID).
+		Order("created_at DESC").
 		Find(&notifications).Error
 	if err != nil {
 		log.Println(err)

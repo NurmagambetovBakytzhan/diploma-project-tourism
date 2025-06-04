@@ -24,7 +24,8 @@ services:
         condition: service_healthy
     networks:
       - app_network
-    image: bakytzhannurmagambetov/notification-service:latest
+    build:
+      context: ./notification-service
 
 
   social-service:
@@ -76,7 +77,8 @@ services:
         condition: service_healthy
     networks:
       - app_network
-    image: bakytzhannurmagambetov/auth-service:latest
+    build:
+      context: ./authentication-service
 
 #  api-gateway:
 #    container_name: api-gateway
@@ -93,7 +95,14 @@ services:
       - "8000:8000"
     networks:
       - app_network
-
+  redis:
+    image: redis:alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
 
   tourism-db:
     container_name: tourism-db
@@ -160,3 +169,4 @@ volumes:
   tourism-backend-bin:
   tourism-backend-pkg:
   tourism-backend-uploads:
+  redis_data:
