@@ -11,8 +11,9 @@ import (
 type (
 	UserInterface interface {
 		LoginUser(user *entity.LoginUserDTO) (string, error)
-		RegisterUser(user *entity.User) (*entity.User, error)
+		RegisterUser(user *entity.User) (*entity.User, string, error)
 		GetUsers() ([]*entity.User, error)
 		GetMe(id uuid.UUID) (*entity.User, error)
+		VerifyEmail(sessionID, code string) error
 	}
 )

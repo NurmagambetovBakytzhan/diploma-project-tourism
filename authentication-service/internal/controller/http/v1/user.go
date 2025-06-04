@@ -23,6 +23,7 @@ func newUserRoutes(handler *gin.RouterGroup, t usecase.UserInterface, l logger.I
 		//h.GET("/", r.GetTours)
 		h.POST("/", r.RegisterUser)
 		h.POST("/login", r.LoginUser)
+		h.POST("/verify", r.VerifyEmail)
 
 		protected := h.Group("/")
 		protected.Use(utils.JWTAuthMiddleware())
@@ -110,6 +111,7 @@ func (r *userRoutes) RegisterUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
 	hashedPassword, err := utils.HashPassword(createUserDTO.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error hashing password"})
@@ -123,7 +125,31 @@ func (r *userRoutes) RegisterUser(c *gin.Context) {
 		Role:     "user",
 	}
 
-	createdUser, err := r.t.RegisterUser(&user)
+	createdUser, sessionID, err := r.t.RegisterUser(&user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "User": createdUser})
+	c.JSON(http.StatusCreated, gin.H{
+		"message":    "User registered successfully. Please check your email for verification code.",
+		"session_id": sessionID,
+		"user":       createdUser,
+	})
+}
+
+func (r *userRoutes) VerifyEmail(c *gin.Context) {
+	var verifyDTO entity.VerifyEmailDTO
+	if err := c.ShouldBindJSON(&verifyDTO); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := r.t.VerifyEmail(verifyDTO.SessionID, verifyDTO.Code)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Email verified successfully"})
 }

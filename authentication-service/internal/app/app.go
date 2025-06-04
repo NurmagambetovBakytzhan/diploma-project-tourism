@@ -3,8 +3,11 @@ package app
 
 import (
 	"authentication-service/pkg/casbin"
+	"authentication-service/pkg/email"
 	"authentication-service/pkg/kafka"
+	"authentication-service/pkg/redis"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -43,9 +46,20 @@ func Run(cfg *config.Config) {
 		l.Fatal(fmt.Errorf("app - Run - postgres.Migrate: %w", err))
 	}
 
+	redisClient, err := redis.NewRedisClient(
+		"redis:6379",
+		"",
+		0,
+	)
+	if err != nil {
+		log.Fatalf("Failed to connect to Redis: %v", err)
+	}
+	emailService := email.NewEmailService()
 	userUseCase := usecase.NewUserUseCase(
 		repo.NewUserRepo(pg),
 		kafkaProducer,
+		redisClient,
+		emailService,
 	)
 
 	// HTTP Server

@@ -55,3 +55,19 @@ func (u *UserRepo) RegisterUser(user *entity.User) (*entity.User, error) {
 	}
 	return user, nil
 }
+
+func (u *UserRepo) VerifyUser(id uuid.UUID) (*entity.User, error) {
+	var user entity.User
+	result := u.PG.Conn.Model(&entity.User{}).Where("id = ?", id).Update("verified", true)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	// Fetch the updated user
+	err := u.PG.Conn.First(&user, "id = ?", id).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}

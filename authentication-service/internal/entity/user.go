@@ -12,4 +12,5 @@ type User struct {
 	Email      string    `gorm:"unique;not null"`
 	Password   string    `gorm:"not null"`
 	Role       string    `gorm:"not null"` // user,admin, etc.
+	Verified   bool      `gorm:"default:false"`
 }
